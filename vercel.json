@@ -1,11 +1,6 @@
 {
-  "buildCommand": "echo 'static site'",
-  "outputDirectory": "frontend",
-  "framework": "none",
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/frontend/$1"
-    }
-  ]
+  "installCommand": "echo 'static site — no install'",
+  "outputDirectory": ".",
+  "framework": null,
+  "buildCommand": "echo 'static build'"
 }

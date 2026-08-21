@@ -4,87 +4,56 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Credo</title>
-    <link rel="stylesheet" href="styles.css?v=5">
+    <link rel="stylesheet" href="styles.css?v=6">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#FF6B35">
+    <meta name="theme-color" content="#080D14">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Credo">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Load Tesseract.js directly from CDN -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
 
-    <!-- Onboarding Overlay -->
     <div id="onboarding" class="onboarding hidden" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
         <div class="onboarding-content">
-            <button class="onboarding-skip" onclick="app.completeOnboarding()" aria-label="Skip onboarding">Skip</button>
-            
+            <button class="onboarding-skip" onclick="app.completeOnboarding()">Skip</button>
             <div class="onboarding-pages">
-                <!-- Page 1: Welcome -->
                 <div class="onboarding-page active" data-page="1">
                     <div class="onboarding-icon">
-                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
                     </div>
                     <h2 id="onboarding-title">Welcome to Credo</h2>
-                    <p>Your offline-first medication authenticity verifier. Scan batch numbers to instantly detect counterfeit drugs using NAFDAC's database.</p>
-                    <div class="onboarding-indicators">
-                        <span class="indicator active"></span>
-                        <span class="indicator"></span>
-                        <span class="indicator"></span>
-                        <span class="indicator"></span>
-                    </div>
+                    <p>Your offline-first medication authenticity verifier. Scan batch numbers to instantly detect counterfeit drugs.</p>
+                    <div class="onboarding-indicators"><span class="indicator active"></span><span class="indicator"></span><span class="indicator"></span><span class="indicator"></span></div>
                 </div>
-                
-                <!-- Page 2: How it works -->
                 <div class="onboarding-page" data-page="2">
                     <div class="onboarding-icon">
-                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
                     </div>
                     <h2>Scan Any Medication</h2>
-                    <p>Point your camera at the batch number on any drug package. Credo reads the text and checks it against the NAFDAC counterfeit database — fully offline after first sync.</p>
-                    <div class="onboarding-indicators">
-                        <span class="indicator"></span>
-                        <span class="indicator active"></span>
-                        <span class="indicator"></span>
-                        <span class="indicator"></span>
-                    </div>
+                    <p>Point your camera at the batch number on any drug package. Credo reads the text and checks it against the NAFDAC database.</p>
+                    <div class="onboarding-indicators"><span class="indicator"></span><span class="indicator active"></span><span class="indicator"></span><span class="indicator"></span></div>
                 </div>
-                
-                <!-- Page 3: Offline-first -->
                 <div class="onboarding-page" data-page="3">
                     <div class="onboarding-icon">
-                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
                     </div>
                     <h2>Works Offline</h2>
-                    <p>Database syncs when you're online. After that, verify medications anywhere — clinics, pharmacies, markets — no internet required. Your scan history stays private on your device.</p>
-                    <div class="onboarding-indicators">
-                        <span class="indicator"></span>
-                        <span class="indicator"></span>
-                        <span class="indicator active"></span>
-                        <span class="indicator"></span>
-                    </div>
+                    <p>Database syncs when online. After that, verify medications anywhere — clinics, pharmacies, markets — no internet required.</p>
+                    <div class="onboarding-indicators"><span class="indicator"></span><span class="indicator"></span><span class="indicator active"></span><span class="indicator"></span></div>
                 </div>
-                
-                <!-- Page 4: Permissions -->
                 <div class="onboarding-page" data-page="4">
                     <div class="onboarding-icon">
-                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="17"/></svg>
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="17"/></svg>
                     </div>
                     <h2>Permissions Needed</h2>
-                    <p>We'll ask for camera access to scan batch numbers and location (optional) to map counterfeit hotspots. No personal data is collected.</p>
+                    <p>We need camera access to scan batch numbers and optional location to map counterfeit hotspots. No personal data collected.</p>
                     <button class="btn btn-primary" onclick="app.requestPermissions()" style="margin-top:1rem;">Grant Permissions</button>
-                    <div class="onboarding-indicators">
-                        <span class="indicator"></span>
-                        <span class="indicator"></span>
-                        <span class="indicator"></span>
-                        <span class="indicator active"></span>
-                    </div>
+                    <div class="onboarding-indicators"><span class="indicator"></span><span class="indicator"></span><span class="indicator"></span><span class="indicator active"></span></div>
                 </div>
             </div>
-            
             <div class="onboarding-nav">
                 <button class="btn btn-outline" id="onboarding-prev" onclick="app.prevOnboardingPage()" disabled>Back</button>
                 <button class="btn btn-primary" id="onboarding-next" onclick="app.nextOnboardingPage()">Next</button>
@@ -92,222 +61,220 @@
         </div>
     </div>
 
-    <!-- Native App Container -->
     <div id="app">
-        
+
         <!-- HOME VIEW -->
         <div id="view-home" class="view active-view">
             <header>
-                <h1 class="brand-title">Credo</h1>
-                <p class="brand-subtitle">NAFDAC Medical Authenticity Platform.</p>
+                <h1 class="brand-title">CREDO</h1>
+                <p class="brand-subtitle">NAFDAC Medical Authenticity Platform</p>
                 <span id="mode-badge" class="mode-badge live"><span class="dot"></span><span id="mode-badge-text">Live Sync</span></span>
             </header>
 
-            <button class="card cta-btn" onclick="app.navigate('scan')" aria-label="Start scanning medication">
-                <div class="icon-wrap-primary">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+            <button class="cta-card" onclick="app.navigate('scan')">
+                <div class="cta-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
                 </div>
                 <div class="cta-text">
                     <h2>Start Scan</h2>
-                    <p>Align camera with medication batch number to verify authenticity.</p>
+                    <p>Align camera with medication batch number</p>
                 </div>
+                <svg class="cta-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
             </button>
 
-            <button class="btn btn-demo" onclick="app.toggleDemo()" aria-label="Toggle demo mode">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <button class="btn-demo" onclick="app.toggleDemo()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                 <span id="demo-label">Try Live Demo</span>
             </button>
 
             <div class="history-section">
                 <div class="history-header">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
                     <h3>Scan Log</h3>
                 </div>
                 <div id="history-container">
-                    <div class="skeleton-card" aria-hidden="true"></div>
-                    <div class="skeleton-card" aria-hidden="true"></div>
-                    <div class="skeleton-card" aria-hidden="true"></div>
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
                 </div>
-            </div>
-            
-            <div id="home-error" class="error-state hidden" role="alert">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                <p id="home-error-text"></p>
-                <button class="btn btn-primary" onclick="app.renderHistory()">Retry</button>
             </div>
         </div>
 
         <!-- SCANNER VIEW -->
         <div id="view-scan" class="view">
-            <video id="camera-feed" autoplay playsinline></video>
-            
-            <div class="scanner-toolbar">
-                <button class="btn-icon" id="btn-flashlight" onclick="app.toggleFlashlight()" aria-label="Toggle flashlight" aria-pressed="false">
-                    <svg class="icon-flash-off" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 7h-1v-3a2 2 0 0 0-2-2H10a2 2 0 0 0-2 2v3H7"/><path d="M7 17h.01"/><path d="M17 17h.01"/><path d="M10 17h.01"/><path d="M13 17h.01"/><path d="M3 17h18"/><path d="M12 7v10"/></svg>
-                    <svg class="icon-flash-on" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17 7h-1v-3a2 2 0 0 0-2-2H10a2 2 0 0 0-2 2v3H7"/><path d="M7 17h.01"/><path d="M17 17h.01"/><path d="M10 17h.01"/><path d="M13 17h.01"/><path d="M3 17h18"/><path d="M12 7v10"/><path d="M9 15h6"/><path d="M10 12h4"/></svg>
-                </button>
-                
-                <button class="btn-icon" id="btn-zoom" onclick="app.cycleZoom()" aria-label="Cycle zoom level">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><path d="M11 8v6"/><path d="M8 11h6"/></svg>
-                    <span id="zoom-label" class="zoom-label">1x</span>
-                </button>
-                
-                <button class="btn-icon" id="btn-manual" onclick="app.openManualEntry()" aria-label="Manual batch entry">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 12h10"/><path d="M12 9v6"/></svg>
-                </button>
+            <div class="scan-header">
+                <span class="brand-mark">CREDO</span>
+                <span class="live-badge" id="live-badge">● LIVE</span>
             </div>
 
-            <button class="btn-close" onclick="app.navigate('home')" aria-label="Close scanner">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
+            <div class="scan-viewport">
+                <video id="camera-feed" autoplay playsinline></video>
 
-            <div class="scanner-overlay">
-                <div id="sync-badge" class="sync-badge" role="status" aria-live="polite">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
-                    <span>Syncing Database</span>
+                <div id="demo-overlay" class="demo-overlay hidden">
+                    <div class="demo-frame">
+                        <div class="frame-corner tl"></div>
+                        <div class="frame-corner tr"></div>
+                        <div class="frame-corner bl"></div>
+                        <div class="frame-corner br"></div>
+                        <div class="scan-line demo-sweep"></div>
+                    </div>
+                    <p class="demo-pill">DEMO MODE</p>
+                    <p class="demo-hint">Tap anywhere to scan instantly</p>
                 </div>
 
-                <div class="bracket-box" role="img" aria-label="Scan frame - align batch number within brackets">
-                    <div class="corner top-left"></div>
-                    <div class="corner top-right"></div>
-                    <div class="corner bottom-left"></div>
-                    <div class="corner bottom-right"></div>
+                <div id="scan-frame" class="scan-frame">
+                    <div class="frame-corner tl"></div>
+                    <div class="frame-corner tr"></div>
+                    <div class="frame-corner bl"></div>
+                    <div class="frame-corner br"></div>
                     <div id="scan-line" class="scan-line"></div>
-                </div>
-
-                <p id="scan-status" class="scan-status" aria-live="assertive">ANALYZING BATCH NUMBER</p>
-                <p id="ocr-debug" class="ocr-debug" aria-live="polite"></p>
-                
-                <div id="scan-error" class="scan-error hidden" role="alert">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                    <p id="scan-error-text"></p>
-                    <div class="scan-error-actions">
-                        <button class="btn btn-outline-light" onclick="app.startScanner()">Retry Camera</button>
-                        <button class="btn btn-primary" onclick="app.enableDemoFromError()">Use Demo Mode</button>
+                    <div id="batch-label" class="batch-label hidden">
+                        <span class="batch-tag">BATCH DETECTED</span>
+                        <span id="batch-value" class="batch-value"></span>
                     </div>
                 </div>
             </div>
 
-            <!-- Manual Entry Modal -->
-            <div id="manual-modal" class="verdict-modal hidden" role="dialog" aria-modal="true" aria-labelledby="manual-title">
-                <div class="verdict-header">
-                    <button class="btn-icon" onclick="app.closeManualEntry()" aria-label="Close manual entry" style="margin-right:auto">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                    </button>
-                    <div>
-                        <h2 id="manual-title">Manual Entry</h2>
-                        <p class="verdict-subtitle">Enter batch number manually</p>
+            <div class="scan-footer">
+                <p id="scan-status" class="scan-status">ALIGN MEDICATION</p>
+                <p class="scan-sub">OCR · EDGE AI</p>
+            </div>
+
+            <!-- AI Processing Panel -->
+            <div id="ai-panel" class="ai-panel hidden">
+                <p class="ai-title">EDGE PROCESSING</p>
+                <div class="ai-step" id="step-1"><span class="step-icon">✓</span> Package detected</div>
+                <div class="ai-step" id="step-2"><span class="step-icon">✓</span> Text region detected</div>
+                <div class="ai-step" id="step-3"><span class="step-icon">✓</span> OCR extraction</div>
+                <div class="ai-step" id="step-4"><span class="step-icon">✓</span> Batch number identified</div>
+                <div class="ai-step" id="step-5"><span class="step-icon">→</span> Checking local database</div>
+            </div>
+
+            <!-- Verdict: Authentic -->
+            <div id="verdict-safe" class="verdict-overlay hidden">
+                <div class="verdict-content">
+                    <p class="verdict-type safe-color">AUTHENTIC</p>
+                    <h1 class="verdict-main safe-color">VERIFIED</h1>
+                    <p id="v-batch-safe" class="verdict-batch-display"></p>
+                    <div class="status-stack">
+                        <div class="s-row"><span class="s-label">OCR</span><span class="s-val">COMPLETE</span></div>
+                        <div class="s-row"><span class="s-label">LOCAL DATABASE</span><span class="s-val">VERIFIED</span></div>
+                        <div class="s-row"><span class="s-label">NETWORK</span><span class="s-val">OFFLINE</span></div>
+                        <div class="s-row"><span class="s-label">VERDICT</span><span class="s-val safe-color">AUTHENTIC</span></div>
                     </div>
-                </div>
-                
-                <div class="manual-input-group">
-                    <label for="manual-batch" class="sr-only">Batch Number</label>
-                    <input type="text" id="manual-batch" class="manual-input" placeholder="Enter Batch Number" autocomplete="off" aria-describedby="manual-hint" spellcheck="false">
-                    <p id="manual-hint" class="manual-hint">Found on medication packaging</p>
-                </div>
-                
-                <div class="manual-actions">
-                    <button class="btn btn-outline" onclick="app.closeManualEntry()">Cancel</button>
-                    <button class="btn btn-primary" onclick="app.submitManualEntry()">Verify</button>
+                    <button class="btn-scan-another" onclick="app.resetScanner()">SCAN ANOTHER</button>
                 </div>
             </div>
 
-            <!-- Verdict Modal -->
-            <div id="verdict-modal" class="verdict-modal hidden" role="dialog" aria-modal="true" aria-labelledby="verdict-title">
-                <div class="verdict-header">
-                    <div id="verdict-icon" class="verdict-icon-wrap"></div>
-                    <div>
-                        <h2 id="verdict-title">Verdict</h2>
-                        <p class="verdict-subtitle">NAFDAC Authentication</p>
+            <!-- Verdict: Counterfeit -->
+            <div id="verdict-fake" class="verdict-overlay hidden">
+                <div class="verdict-content">
+                    <p class="verdict-type fake-color">COUNTERFEIT</p>
+                    <h1 class="verdict-main fake-color">ALERT</h1>
+                    <p id="v-batch-fake" class="verdict-batch-display"></p>
+                    <div class="status-stack">
+                        <div class="s-row"><span class="s-label">OCR</span><span class="s-val">COMPLETE</span></div>
+                        <div class="s-row"><span class="s-label">LOCAL DATABASE</span><span class="s-val">MATCH</span></div>
+                        <div class="s-row"><span class="s-label">NETWORK</span><span class="s-val">OFFLINE</span></div>
+                        <div class="s-row"><span class="s-label">VERDICT</span><span class="s-val fake-color">HIGH RISK</span></div>
                     </div>
+                    <div class="warning-badge">🔊 WARNING ACTIVE</div>
+                    <button class="btn-scan-another" onclick="app.resetScanner()">SCAN ANOTHER</button>
                 </div>
-                
-                <div class="verdict-body">
-                    <p id="verdict-drug" class="verdict-drug"></p>
-                    <p class="verdict-batch">Batch NO: <span id="verdict-batch-text"></span></p>
+            </div>
+
+            <!-- Toolbar -->
+            <div class="scan-toolbar">
+                <button class="tool-btn" id="btn-flashlight" onclick="app.toggleFlashlight()" aria-label="Toggle flashlight">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 7h-1v-3a2 2 0 0 0-2-2H10a2 2 0 0 0-2 2v3H7"/><path d="M7 17h.01"/><path d="M17 17h.01"/><path d="M10 17h.01"/><path d="M13 17h.01"/><path d="M3 17h18"/><path d="M12 7v10"/></svg>
+                </button>
+                <button class="tool-btn" id="btn-zoom" onclick="app.cycleZoom()" aria-label="Cycle zoom">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><path d="M11 8v6"/><path d="M8 11h6"/></svg>
+                    <span id="zoom-label" class="zoom-lbl">1x</span>
+                </button>
+                <button class="tool-btn" id="btn-manual" onclick="app.openManualEntry()" aria-label="Manual batch entry">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 12h10"/><path d="M12 9v6"/></svg>
+                </button>
+                <button class="tool-btn" onclick="app.navigate('home')" aria-label="Close scanner">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+
+            <div id="scan-error" class="scan-error hidden">
+                <p id="scan-error-text"></p>
+                <div class="scan-error-actions">
+                    <button class="btn btn-outline" onclick="app.startScanner()">Retry Camera</button>
+                    <button class="btn btn-primary" onclick="app.enableDemoFromError()">Use Demo Mode</button>
                 </div>
-                
-                <p id="verdict-message" class="verdict-message"></p>
-                
-                <button class="btn btn-primary" onclick="app.resetScanner()">Scan Another Package</button>
             </div>
         </div>
 
         <!-- DASHBOARD VIEW -->
         <div id="view-dashboard" class="view">
-            <div class="dashboard-header">
+            <div class="dash-header">
                 <div>
-                    <h1 class="brand-title">Intelligence Dashboard</h1>
-                    <p class="brand-subtitle">Global pharmaceutical telemetry & mapping.</p>
+                    <h1 class="dash-title">CREDO <span class="dash-slash">/</span> INTELLIGENCE</h1>
+                    <p class="dash-sub">Global pharmaceutical threat monitoring</p>
                 </div>
-                <button class="btn btn-outline" onclick="app.fetchDashboardData()" aria-label="Refresh dashboard data">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-                    Refresh
-                </button>
+                <button class="btn-refresh" onclick="app.fetchDashboardData()">↻ REFRESH</button>
             </div>
 
-            <p id="dash-offline" class="offline-note hidden">Backend asleep — showing sample data</p>
+            <div id="dash-offline" class="offline-chip hidden">Backend asleep — showing sample data</div>
 
-            <div class="metrics-grid" id="metrics-grid">
-                <div class="card metric-card skeleton" aria-hidden="true">
-                    <div class="metric-title skeleton-text"></div>
-                    <div class="metric-value skeleton-text"></div>
-                </div>
-                <div class="card metric-card border-danger skeleton" aria-hidden="true">
-                    <div class="metric-title skeleton-text"></div>
-                    <div class="metric-value skeleton-text"></div>
-                </div>
-                <div class="card metric-card skeleton" aria-hidden="true">
-                    <div class="metric-title skeleton-text"></div>
-                    <div class="metric-value skeleton-text"></div>
-                </div>
+            <div class="dash-metrics" id="dash-metrics">
+                <div class="dash-metric"><span class="metric-num" id="m-total">—</span><span class="metric-label">TOTAL SCANS</span></div>
+                <div class="dash-metric red"><span class="metric-num" id="m-fake">—</span><span class="metric-label">COUNTERFEIT ALERTS</span></div>
+                <div class="dash-metric amber"><span class="metric-num" id="m-rate">—</span><span class="metric-label">ALERT RATE</span></div>
+                <div class="dash-metric blue"><span class="metric-num" id="m-loc">—</span><span class="metric-label">ACTIVE LOCATIONS</span></div>
             </div>
 
-            <h2 class="table-title">Recent Geographic Telemetry</h2>
-            <div class="card table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Timestamp</th>
-                            <th>Product</th>
-                            <th>Batch No.</th>
-                            <th>Coordinates</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="telemetry-table-body">
-                        <tr class="skeleton-row" aria-hidden="true"><td colspan="5"><div class="skeleton-row-inner"></div></td></tr>
-                        <tr class="skeleton-row" aria-hidden="true"><td colspan="5"><div class="skeleton-row-inner"></div></td></tr>
-                        <tr class="skeleton-row" aria-hidden="true"><td colspan="5"><div class="skeleton-row-inner"></div></td></tr>
-                    </tbody>
-                </table>
+            <div class="dash-section">
+                <h3 class="dash-section-title">SCAN ACTIVITY</h3>
+                <div class="map-area" id="map-area"></div>
             </div>
-            
-            <div id="dashboard-error" class="error-state hidden" role="alert">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                <p id="dashboard-error-text"></p>
-                <button class="btn btn-primary" onclick="app.fetchDashboardData()">Retry</button>
+
+            <div class="dash-section">
+                <h3 class="dash-section-title">RECENT THREATS</h3>
+                <div id="threats-list"></div>
             </div>
         </div>
 
-        <!-- Navigation Bar -->
+        <!-- Bottom Nav -->
         <nav id="bottom-nav" class="bottom-nav">
             <button class="nav-item active" onclick="app.navigate('home')">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                <span>Verification</span>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                <span>Verify</span>
             </button>
-            <button class="nav-item" onclick="app.navigate('scan')">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+            <button class="nav-item scan-nav" onclick="app.navigate('scan')">
+                <div class="scan-nav-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                </div>
                 <span>Scan</span>
             </button>
             <button class="nav-item" onclick="app.navigate('dashboard')">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                <span>Telemetry</span>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                <span>Intel</span>
             </button>
         </nav>
-
     </div>
-    
+
+    <!-- Manual Entry Modal -->
+    <div id="manual-modal" class="modal hidden" role="dialog" aria-modal="true">
+        <div class="modal-backdrop" onclick="app.closeManualEntry()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Manual Entry</h2>
+                <button class="modal-close" onclick="app.closeManualEntry()">✕</button>
+            </div>
+            <label for="manual-batch" class="sr-only">Batch Number</label>
+            <input type="text" id="manual-batch" class="manual-input" placeholder="BATCH NUMBER" autocomplete="off" spellcheck="false">
+            <p class="manual-hint">Found on medication packaging</p>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="app.closeManualEntry()">Cancel</button>
+                <button class="btn btn-primary" onclick="app.submitManualEntry()">Verify</button>
+            </div>
+        </div>
+    </div>
+
     <script src="app.js"></script>
 </body>
 </html>
