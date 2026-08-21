@@ -8,6 +8,13 @@ const DEMO_BATCHES = {
     'CNTF789': { drug: 'Artemether/Lumefantrine', message: 'Counterfeit batch circulating in Lagos markets.' }
 };
 
+const MEDICINES = {
+    'Combisunate 20/120': { name: 'Combisunate', dose: 'Artemether 20mg + Lumefantrine 120mg' },
+    'Amoxicillin 500mg': { name: 'Amoxicillin', dose: 'Amoxicillin Trihydrate 500mg Capsules' },
+    'Paracetamol 500mg': { name: 'Paracetamol', dose: 'Paracetamol 500mg Tablets' },
+    'Artemether Lumefantrine': { name: 'Coartem', dose: 'Artemether 20mg + Lumefantrine 120mg' },
+};
+
 const app = {
     state: {
         currentView: 'home',
@@ -175,54 +182,29 @@ const app = {
 
         const vp = document.querySelector('.scan-viewport');
         vp.classList.add('demo-bg');
+        const firstScan = app.state.demoScans[app.state.demoScanIndex];
+        const med = MEDICINES[firstScan.drug] || { name: firstScan.drug, dose: '' };
         let pkg = document.querySelector('.demo-package');
         if (!pkg) {
             pkg = document.createElement('div');
             pkg.className = 'demo-package';
-            pkg.innerHTML = `
+            vp.appendChild(pkg);
+        }
+        pkg.innerHTML = `
                 <div class="pkg-top">
-                    <div>
-                        <div class="pkg-logo">PHARMA</div>
-                    </div>
+                    <div><div class="pkg-logo">PHARMA</div></div>
                     <div class="pkg-nafdac">NAFDAC REG</div>
                 </div>
-                <div class="pkg-name">Combisunate</div>
-                <div class="pkg-dose">Artemether 20mg + Lumefantrine 120mg</div>
+                <div class="pkg-name">${med.name}</div>
+                <div class="pkg-dose">${med.dose}</div>
                 <div class="pkg-divider"></div>
                 <div class="pkg-meta">
-                    <div class="pkg-batch" id="pkg-batch-text">VALID123</div>
+                    <div class="pkg-batch" id="pkg-batch-text">${firstScan.batch}</div>
                     <div class="pkg-exp">EXP 08/2027</div>
                 </div>
                 <div class="pkg-barcode">
-                    <div class="pkg-bar" style="width:2px"></div>
-                    <div class="pkg-bar" style="width:1px"></div>
-                    <div class="pkg-bar" style="width:3px"></div>
-                    <div class="pkg-bar" style="width:1px"></div>
-                    <div class="pkg-bar" style="width:2px"></div>
-                    <div class="pkg-bar" style="width:1px"></div>
-                    <div class="pkg-bar" style="width:3px"></div>
-                    <div class="pkg-bar" style="width:1px"></div>
-                    <div class="pkg-bar" style="width:2px"></div>
-                    <div class="pkg-bar" style="width:3px"></div>
-                    <div class="pkg-bar" style="width:1px"></div>
-                    <div class="pkg-bar" style="width:2px"></div>
-                    <div class="pkg-bar" style="width:1px"></div>
-                    <div class="pkg-bar" style="width:3px"></div>
-                    <div class="pkg-bar" style="width:1px"></div>
-                    <div class="pkg-bar" style="width:2px"></div>
-                    <div class="pkg-bar" style="width:1px"></div>
-                    <div class="pkg-bar" style="width:3px"></div>
-                    <div class="pkg-bar" style="width:2px"></div>
-                    <div class="pkg-bar" style="width:1px"></div>
-                    <div class="pkg-bar" style="width:2px"></div>
-                    <div class="pkg-bar" style="width:3px"></div>
-                    <div class="pkg-bar" style="width:1px"></div>
-                    <div class="pkg-bar" style="width:2px"></div>
-                    <div class="pkg-bar" style="width:1px"></div>
-                    <div class="pkg-bar" style="width:3px"></div>
+                    <div class="pkg-bar" style="width:2px"></div><div class="pkg-bar" style="width:1px"></div><div class="pkg-bar" style="width:3px"></div><div class="pkg-bar" style="width:1px"></div><div class="pkg-bar" style="width:2px"></div><div class="pkg-bar" style="width:1px"></div><div class="pkg-bar" style="width:3px"></div><div class="pkg-bar" style="width:1px"></div><div class="pkg-bar" style="width:2px"></div><div class="pkg-bar" style="width:3px"></div><div class="pkg-bar" style="width:1px"></div><div class="pkg-bar" style="width:2px"></div><div class="pkg-bar" style="width:1px"></div><div class="pkg-bar" style="width:3px"></div><div class="pkg-bar" style="width:1px"></div><div class="pkg-bar" style="width:2px"></div><div class="pkg-bar" style="width:1px"></div><div class="pkg-bar" style="width:3px"></div><div class="pkg-bar" style="width:2px"></div><div class="pkg-bar" style="width:1px"></div>
                 </div>`;
-            vp.appendChild(pkg);
-        }
         pkg.style.display = '';
 
         document.getElementById('demo-overlay').classList.remove('hidden');
@@ -242,17 +224,24 @@ const app = {
         if (!app.state.isScanning) return;
         const scan = app.state.demoScans[app.state.demoScanIndex];
         const batch = scan.batch;
+        const med = MEDICINES[scan.drug] || { name: scan.drug, dose: '' };
 
         app.state.scanPhase = 'detected';
         const demoSweep = document.querySelector('.demo-overlay .scan-line');
         if (demoSweep) demoSweep.style.animation = 'none';
         document.querySelector('.demo-frame').classList.add('detected');
+
+        const pkgName = document.querySelector('.pkg-name');
+        const pkgDose = document.querySelector('.pkg-dose');
         const pkgBatch = document.getElementById('pkg-batch-text');
+        if (pkgName) pkgName.textContent = med.name;
+        if (pkgDose) pkgDose.textContent = med.dose;
         if (pkgBatch) {
             pkgBatch.textContent = batch;
             pkgBatch.style.color = scan.verdict === 'COUNTERFEIT' ? 'var(--red)' : 'var(--vermilion)';
         }
-        document.querySelector('.demo-package').style.boxShadow = scan.verdict === 'COUNTERFEIT'
+        const pkg = document.querySelector('.demo-package');
+        if (pkg) pkg.style.boxShadow = scan.verdict === 'COUNTERFEIT'
             ? '0 0 40px rgba(239,68,68,0.3), 0 30px 80px rgba(0,0,0,0.6)'
             : '0 0 40px rgba(255,107,53,0.3), 0 30px 80px rgba(0,0,0,0.6)';
         document.getElementById('scan-status').textContent = 'BATCH DETECTED';
@@ -265,6 +254,7 @@ const app = {
             document.getElementById('scan-status').textContent = 'EDGE PROCESSING...';
             app.animateAISteps(() => {
                 app.handleVerdict(scan);
+                app.state.demoScanIndex = (app.state.demoScanIndex + 1) % app.state.demoScans.length;
             });
         }, 800);
     },
