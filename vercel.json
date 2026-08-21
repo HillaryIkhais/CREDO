@@ -1,0 +1,11 @@
+{
+  "buildCommand": "echo 'static site'",
+  "outputDirectory": "frontend",
+  "framework": "none",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/frontend/$1"
+    }
+  ]
+}

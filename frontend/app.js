@@ -16,7 +16,15 @@ const app = {
         ocrThrottleMs: 1500,
         manualEntryResolve: null,
         onboardingPage: 1,
-        onboardingComplete: localStorage.getItem('onboardingComplete') === 'true'
+        onboardingComplete: localStorage.getItem('onboardingComplete') === 'true',
+        demoMode: new URLSearchParams(window.location.search).get('demo') === 'true',
+        demoScans: [
+            { drug: 'Combisunate 20/120', batch: 'VALID123', verdict: 'SAFE', message: 'Medicine verified as safe.' },
+            { drug: 'Amoxicillin 500mg', batch: 'FAKE001', verdict: 'COUNTERFEIT', message: 'Batch number FAKE001 flagged as counterfeit by NAFDAC.' },
+            { drug: 'Paracetamol 500mg', batch: 'VALID456', verdict: 'SAFE', message: 'Medicine verified as safe.' },
+            { drug: 'Artemether Lumefantrine', batch: 'CNTF789', verdict: 'COUNTERFEIT', message: 'Batch number CNTF789 flagged as counterfeit by NAFDAC.' },
+        ],
+        demoScanIndex: 0,
     },
     
     // Core Navigation Engine
@@ -118,6 +126,12 @@ const app = {
 
     // Camera & WebAssembly OCR Engine
     startScanner: async () => {
+        // Demo mode - simulate scanning without camera
+        if (app.state.demoMode) {
+            app.startDemoScanner();
+            return;
+        }
+        
         app.state.isScanning = true;
         app.state.flashlightOn = false;
         app.state.zoomLevel = 1;
@@ -161,10 +175,67 @@ const app = {
             document.getElementById('scan-status').innerText = 'CAMERA ERROR';
         }
     },
+
+    startDemoScanner: () => {
+        app.state.isScanning = true;
+        document.getElementById('scan-line').classList.add('animating');
+        document.getElementById('scan-status').innerText = 'ANALYZING BATCH NUMBER (DEMO)';
+        document.getElementById('verdict-modal').classList.remove('visible');
+        document.getElementById('manual-modal').classList.remove('visible');
+        document.getElementById('scan-error').classList.add('hidden');
+        
+        // Hide camera feed, show demo overlay
+        const video = document.getElementById('camera-feed');
+        video.style.display = 'none';
+        
+        // Create or show demo overlay
+        let demoOverlay = document.getElementById('demo-overlay');
+        if (!demoOverlay) {
+            demoOverlay = document.createElement('div');
+            demoOverlay.id = 'demo-overlay';
+            demoOverlay.className = 'demo-overlay';
+            demoOverlay.innerHTML = `
+                <div class="demo-frame">
+                    <div class="demo-corner top-left"></div>
+                    <div class="demo-corner top-right"></div>
+                    <div class="demo-corner bottom-left"></div>
+                    <div class="demo-corner bottom-right"></div>
+                    <div class="demo-scan-line"></div>
+                </div>
+                <p class="demo-text">DEMO MODE - Tap to simulate scan</p>
+            `;
+            document.querySelector('#view-scan .scanner-overlay').prepend(demoOverlay);
+            
+            demoOverlay.addEventListener('click', () => app.simulateDemoScan());
+        }
+        demoOverlay.style.display = 'flex';
+        
+        // Sync database in background
+        app.db.sync();
+    },
+
+    simulateDemoScan: () => {
+        const scan = app.state.demoScans[app.state.demoScanIndex];
+        app.state.demoScanIndex = (app.state.demoScanIndex + 1) % app.state.demoScans.length;
+        
+        document.getElementById('scan-status').innerText = 'SCAN COMPLETE';
+        document.getElementById('scan-line').classList.remove('animating');
+        
+        setTimeout(() => {
+            app.handleVerdict(scan);
+        }, 800);
+    },
     
     stopScanner: () => {
         app.state.isScanning = false;
         document.getElementById('scan-line').classList.remove('animating');
+        
+        // Demo mode cleanup
+        const demoOverlay = document.getElementById('demo-overlay');
+        if (demoOverlay) demoOverlay.style.display = 'none';
+        const video = document.getElementById('camera-feed');
+        video.style.display = '';
+        
         if (app.state.videoTrack) {
             app.state.videoTrack.stop();
             app.state.videoTrack = null;
@@ -173,7 +244,6 @@ const app = {
             app.state.videoStream.getTracks().forEach(track => track.stop());
             app.state.videoStream = null;
         }
-        const video = document.getElementById('camera-feed');
         video.srcObject = null;
         app.state.flashlightOn = false;
         app.updateFlashlightUI();

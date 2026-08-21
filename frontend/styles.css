@@ -241,6 +241,50 @@ body {
 .ocr-debug { color: rgba(255,255,255,0.8); font-size: 0.85rem; margin-top: 0.75rem; font-family: monospace; background: rgba(0,0,0,0.4); padding: 0.4rem 0.75rem; border-radius: 8px; backdrop-filter: blur(4px); display: none; }
 .ocr-debug.visible { display: block; }
 
+/* Demo Mode Overlay */
+.demo-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 15;
+  cursor: pointer;
+}
+.demo-frame {
+  width: 280px;
+  height: 100px;
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+.demo-corner {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-color: var(--accent-primary);
+}
+.demo-corner.top-left { top: 0; left: 0; border-top: 4px solid; border-left: 4px solid; border-top-left-radius: 12px; }
+.demo-corner.top-right { top: 0; right: 0; border-top: 4px solid; border-right: 4px solid; border-top-right-radius: 12px; }
+.demo-corner.bottom-left { bottom: 0; left: 0; border-bottom: 4px solid; border-left: 4px solid; border-bottom-left-radius: 12px; }
+.demo-corner.bottom-right { bottom: 0; right: 0; border-bottom: 4px solid; border-right: 4px solid; border-bottom-right-radius: 12px; }
+.demo-scan-line {
+  position: absolute;
+  top: 0; left: 5%; right: 5%;
+  height: 2px;
+  background: var(--accent-secondary);
+  box-shadow: 0 0 10px var(--accent-secondary-glow);
+  border-radius: 2px;
+  animation: scanSweep 2s infinite ease-in-out;
+}
+.demo-text {
+  color: rgba(255,255,255,0.7);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-align: center;
+  padding: 0 2rem;
+}
+
 /* Verdict Modal - Premium Spring Slide Up */
 .verdict-modal {
   position: absolute; bottom: 0; left: 0; right: 0;
