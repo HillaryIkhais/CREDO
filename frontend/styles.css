@@ -1,18 +1,18 @@
 :root {
-  --bg-main: #fcfcfd;
-  --bg-surface: #ffffff;
-  --text-main: #09090b;
-  --text-muted: #71717a;
-  --accent-primary: #18181b;
-  --accent-green: #10b981;
-  --accent-green-subtle: #d1fae5;
-  --accent-red: #ef4444;
-  --accent-red-subtle: #fee2e2;
-  --border-color: rgba(0, 0, 0, 0.08);
+  --bg-main: #F4F3F0; /* High-end warm alabaster */
+  --bg-surface: #FFFFFF;
+  --text-main: #0D0D0D; /* True onyx */
+  --text-muted: #73736E;
+  --accent-primary: #FF3B00; /* Vibrant Vermilion / Safety Orange */
+  --accent-green: #00D05E; /* Electric Emerald */
+  --accent-green-subtle: #E5F9EF;
+  --accent-red: #FF1100;
+  --accent-red-subtle: #FFEBEE;
+  --border-color: #E2E1D9; /* Warm grey border */
   
-  --shadow-float: 0 20px 40px -15px rgba(0,0,0,0.05);
-  --shadow-btn: 0 8px 20px -8px rgba(0,0,0,0.15);
-  --shadow-up: 0 -10px 40px -10px rgba(0,0,0,0.08);
+  --shadow-float: 0 30px 60px -20px rgba(13, 13, 13, 0.08);
+  --shadow-btn: 0 10px 25px -10px rgba(255, 59, 0, 0.4);
+  --shadow-up: 0 -15px 50px -10px rgba(13, 13, 13, 0.05);
   
   --spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
   --ease: cubic-bezier(0.4, 0, 0.2, 1);
