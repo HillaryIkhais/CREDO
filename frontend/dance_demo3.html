@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dance Demo 3 — Puppet Rigging</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0a0a1a;
+    --stage-bg:linear-gradient(180deg,#0f0f2e 0%,#1a1040 50%,#0a0a1a 100%);
+    --boy-skin:#e8b88a;
+    --boy-hair:#2c1810;
+    --boy-shirt:#1e3a5f;
+    --boy-pants:#1a1a2e;
+    --boy-shoes:#111;
+    --girl-skin:#f0c8a0;
+    --girl-hair:#1a0a05;
+    --girl-top:#8b2252;
+    --girl-skirt:#6b1a40;
+    --girl-legs:#f0c8a0;
+    --girl-shoes:#222;
+    --dance-speed:1;
+  }
+
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:'Segoe UI',system-ui,sans-serif;
+    background:var(--bg);
+    color:#fff;
+    display:flex;flex-direction:column;align-items:center;
+  }
+
+  .header{
+    width:100%;padding:1rem 1.5rem;
+    background:rgba(0,0,0,.5);backdrop-filter:blur(12px);
+    display:flex;align-items:center;justify-content:space-between;
+    border-bottom:1px solid rgba(255,255,255,.06);z-index:20;
+    position:fixed;top:0;left:0;
+  }
+  .header h1{font-size:1rem;font-weight:700;letter-spacing:-.01em}
+  .header h1 span{color:#a78bfa}
+  .status-pill{
+    font-size:.6rem;font-weight:600;letter-spacing:.08em;
+    padding:.25rem .75rem;border-radius:9999px;text-transform:uppercase;
+  }
+  .status-pill.idle{background:rgba(107,114,128,.2);color:#9ca3af}
+  .status-pill.playing{background:rgba(16,185,129,.15);color:#10b981;animation:pulse 1.5s ease infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+
+  .youtube-container{
+    position:fixed;top:56px;left:0;right:0;
+    display:flex;justify-content:center;
+    padding:.75rem 1.5rem;z-index:15;
+  }
+  #youtube-player{
+    width:100%;max-width:480px;aspect-ratio:16/9;
+    border-radius:12px;border:1px solid rgba(255,255,255,.08);
+    background:#000;
+  }
+
+  .stage{
+    position:fixed;top:0;left:0;right:0;bottom:0;
+    background:var(--stage-bg);
+    overflow:hidden;
+  }
+  .floor{
+    position:absolute;bottom:0;left:0;right:0;height:30%;
+    background:linear-gradient(180deg,transparent 0%,rgba(88,28,135,.12) 100%);
+  }
+  .floor::before{
+    content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,transparent,rgba(167,139,250,.3),rgba(236,72,153,.3),transparent);
+  }
+
+  /* Spotlight */
+  .spotlight{
+    position:absolute;width:300px;height:500px;
+    border-radius:50%;filter:blur(80px);opacity:.15;
+    pointer-events:none;
+  }
+  .spotlight.boy-glow{background:#3b82f6;left:15%;bottom:25%}
+  .spotlight.girl-glow{background:#ec4899;right:15%;bottom:25%}
+
+  /* ========================================
+     CHARACTER CONTAINER (per puppet)
+     ======================================== */
+  .character{
+    position:absolute;
+    width:120px;height:220px;
+    bottom:28%;
+    pointer-events:none;
+  }
+  .character.boy{left:20%;transform:translateX(-50%)}
+  .character.girl{right:20%;transform:translateX(50%)}
+
+  /* ========================================
+     BODY SEGMENT — Base layer
+     ======================================== */
+  .seg{
+    position:absolute;
+    transform-origin:center bottom;
+    will-change:transform;
+    transition:opacity .3s;
+  }
+
+  /* --- HEAD --- */
+  .seg.head{
+    width:40px;height:44px;
+    left:50%;top:0;
+    transform:translateX(-50%);
+    z-index:10;
+  }
+  .seg.head .skull{
+    width:36px;height:38px;
+    border-radius:50%;
+    position:absolute;top:0;left:50%;
+    transform:translateX(-50%);
+  }
+  .seg.head .face{
+    width:24px;height:18px;
+    border-radius:0 0 50% 50%;
+    position:absolute;bottom:2px;left:50%;
+    transform:translateX(-50%);
+  }
+  .seg.head .eye{
+    width:3px;height:3px;border-radius:50%;
+    position:absolute;bottom:8px;background:#222;
+  }
+  .seg.head .eye.l{left:8px}
+  .seg.head .eye.r{right:8px}
+
+  /* --- TORSO --- */
+  .seg.torso{
+    width:48px;height:60px;
+    left:50%;top:40px;
+    transform:translateX(-50%);
+    z-index:5;
+  }
+  .seg.torso .chest{
+    width:100%;height:100%;
+    border-radius:8px 8px 4px 4px;
+    position:absolute;top:0;left:0;
+  }
+
+  /* --- LEFT ARM --- */
+  .seg.arm-left{
+    width:18px;height:55px;
+    z-index:4;
+  }
+  .seg.arm-left .upper{
+    width:100%;height:55%;
+    border-radius:8px 4px 6px 8px;
+    position:absolute;top:0;left:0;
+  }
+  .seg.arm-left .lower{
+    width:14px;height:45%;
+    border-radius:4px 4px 6px 6px;
+    position:absolute;bottom:0;left:2px;
+  }
+  .seg.arm-left .hand{
+    width:12px;height:10px;
+    border-radius:50%;
+    position:absolute;bottom:-4px;left:3px;
+  }
+
+  /* Boy arms detached from hip — positioned freely */
+  .character.boy .seg.arm-left{
+    top:42px;left:14px;
+  }
+  .character.boy .seg.arm-right{
+    top:42px;right:14px;
+  }
+  /* Girl arms attached closer to body */
+  .character.girl .seg.arm-left{
+    top:42px;left:12px;
+  }
+  .character.girl .seg.arm-right{
+    top:42px;right:12px;
+  }
+
+  /* --- RIGHT ARM --- */
+  .seg.arm-right{
+    width:18px;height:55px;
+    z-index:4;
+  }
+  .seg.arm-right .upper{
+    width:100%;height:55%;
+    border-radius:4px 8px 8px 6px;
+    position:absolute;top:0;right:0;
+  }
+  .seg.arm-right .lower{
+    width:14px;height:45%;
+    border-radius:4px 4px 6px 6px;
+    position:absolute;bottom:0;right:2px;
+  }
+  .seg.arm-right .hand{
+    width:12px;height:10px;
+    border-radius:50%;
+    position:absolute;bottom:-4px;right:3px;
+  }
+
+  /* --- LEGS --- */
+  .seg.legs{
+    width:44px;height:80px;
+    left:50%;top:96px;
+    transform:translateX(-50%);
+    z-index:3;
+  }
+  .seg.legs .leg{
+    width:18px;height:100%;
+    border-radius:4px 4px 6px 6px;
+    position:absolute;top:0;
+  }
+  .seg.legs .leg.left{left:2px}
+  .seg.legs .leg.right{right:2px}
+  .seg.legs .foot{
+    width:20px;height:8px;
+    border-radius:4px 8px 4px 4px;
+    position:absolute;bottom:-4px;
+  }
+  .seg.legs .foot.left{left:0}
+  .seg.legs .foot.right{right:0}
+
+  /* ========================================
+     BOY COLORS
+     ======================================== */
+  .boy .seg.head .skull{background:var(--boy-hair);border-radius:50% 50% 45% 45%}
+  .boy .seg.head .face{background:var(--boy-skin)}
+  .boy .seg.torso .chest{background:linear-gradient(180deg,var(--boy-shirt),#16304a)}
+  .boy .seg.arm-left .upper,.boy .seg.arm-right .upper{background:var(--boy-shirt)}
+  .boy .seg.arm-left .lower,.boy .seg.arm-right .lower{background:var(--boy-skin)}
+  .boy .seg.arm-left .hand,.boy .seg.arm-right .hand{background:var(--boy-skin)}
+  .boy .seg.legs .leg{background:var(--boy-pants)}
+  .boy .seg.legs .foot{background:var(--boy-shoes)}
+
+  /* ========================================
+     GIRL COLORS
+     ======================================== */
+  .girl .seg.head .skull{background:var(--girl-hair);border-radius:50% 50% 40% 40%}
+  .girl .seg.head .skull::after{
+    content:'';position:absolute;bottom:-8px;left:-6px;right:-6px;
+    height:20px;border-radius:0 0 50% 50%;background:var(--girl-hair);
+  }
+  .girl .seg.head .face{background:var(--girl-skin)}
+  .girl .seg.torso .chest{background:linear-gradient(180deg,var(--girl-top),#7a1d45)}
+  .girl .seg.arm-left .upper,.girl .seg.arm-right .upper{background:var(--girl-top)}
+  .girl .seg.arm-left .lower,.girl .seg.arm-right .lower{background:var(--girl-skin)}
+  .girl .seg.arm-left .hand,.girl .seg.arm-right .hand{background:var(--girl-skin)}
+  .girl .seg.legs .leg{background:var(--girl-legs)}
+  .girl .seg.legs .foot{background:var(--girl-shoes)}
+
+  /* ========================================
+     DANCE ANIMATIONS — BOY
+     Each segment: independent keyframes,
+     small 1–4px shifts, step-timed offsets
+     ======================================== */
+
+  /* BOY HEAD — rhythmic bob + slight tilt */
+  @keyframes boy-head-dance{
+    0%,100%{transform:translateX(-50%) translateY(0) rotate(0deg)}
+    12%{transform:translateX(-50%) translateY(-2px) rotate(-1.5deg)}
+    25%{transform:translateX(-50%) translateY(1px) rotate(0.5deg)}
+    37%{transform:translateX(-50%) translateY(-3px) rotate(1deg)}
+    50%{transform:translateX(-50%) translateY(0) rotate(-0.5deg)}
+    62%{transform:translateX(-50%) translateY(-1px) rotate(1.5deg)}
+    75%{transform:translateX(-50%) translateY(2px) rotate(-1deg)}
+    87%{transform:translateX(-50%) translateY(-2px) rotate(0.5deg)}
+  }
+
+  /* BOY TORSO — hip sway */
+  @keyframes boy-torso-dance{
+    0%,100%{transform:translateX(-50%) translateX(0) rotate(0deg)}
+    25%{transform:translateX(-50%) translateX(2px) rotate(0.8deg)}
+    50%{transform:translateX(-50%) translateX(-1px) rotate(-0.5deg)}
+    75%{transform:translateX(-50%) translateX(3px) rotate(1deg)}
+  }
+
+  /* BOY LEFT ARM — swing opposite to right */
+  @keyframes boy-arm-left-dance{
+    0%,100%{transform:rotate(0deg) translateY(0)}
+    20%{transform:rotate(6deg) translateY(-1px)}
+    40%{transform:rotate(-3deg) translateY(1px)}
+    60%{transform:rotate(8deg) translateY(-2px)}
+    80%{transform:rotate(-2deg) translateY(0)}
+  }
+
+  /* BOY RIGHT ARM — swing opposite to left */
+  @keyframes boy-arm-right-dance{
+    0%,100%{transform:rotate(0deg) translateY(0)}
+    20%{transform:rotate(-5deg) translateY(-1px)}
+    40%{transform:rotate(4deg) translateY(1px)}
+    60%{transform:rotate(-7deg) translateY(-1px)}
+    80%{transform:rotate(2deg) translateY(0)}
+  }
+
+  /* BOY LEGS — stepping rhythm */
+  @keyframes boy-legs-dance{
+    0%,100%{transform:translateX(-50%) translateY(0) skewX(0deg)}
+    20%{transform:translateX(-50%) translateY(-1px) skewX(0.5deg)}
+    40%{transform:translateX(-50%) translateY(1px) skewX(-0.3deg)}
+    60%{transform:translateX(-50%) translateY(-2px) skewX(0.4deg)}
+    80%{transform:translateX(-50%) translateY(0) skewX(-0.5deg)}
+  }
+
+  /* ========================================
+     DANCE ANIMATIONS — GIRL
+     Different rhythm, offset timing
+     ======================================== */
+
+  /* GIRL HEAD — slower, more pronounced bob */
+  @keyframes girl-head-dance{
+    0%,100%{transform:translateX(-50%) translateY(0) rotate(0deg)}
+    15%{transform:translateX(-50%) translateY(-1px) rotate(1.5deg)}
+    30%{transform:translateX(-50%) translateY(2px) rotate(-0.5deg)}
+    45%{transform:translateX(-50%) translateY(-4px) rotate(-1deg)}
+    60%{transform:translateX(-50%) translateY(0) rotate(1deg)}
+    75%{transform:translateX(-50%) translateY(-2px) rotate(-1.5deg)}
+    90%{transform:translateX(-50%) translateY(1px) rotate(0.5deg)}
+  }
+
+  /* GIRL TORSO — wider hip sway */
+  @keyframes girl-torso-dance{
+    0%,100%{transform:translateX(-50%) translateX(0) rotate(0deg)}
+    20%{transform:translateX(-50%) translateX(-3px) rotate(-1deg)}
+    40%{transform:translateX(-50%) translateX(2px) rotate(0.5deg)}
+    60%{transform:translateX(-50%) translateX(-2px) rotate(-0.8deg)}
+    80%{transform:translateX(-50%) translateX(3px) rotate(1.2deg)}
+  }
+
+  /* GIRL LEFT ARM — fluid wave */
+  @keyframes girl-arm-left-dance{
+    0%,100%{transform:rotate(0deg) translateY(0) translateX(0)}
+    16%{transform:rotate(-4deg) translateY(-1px) translateX(1px)}
+    33%{transform:rotate(7deg) translateY(1px) translateX(-1px)}
+    50%{transform:rotate(-2deg) translateY(-2px) translateX(0)}
+    66%{transform:rotate(5deg) translateY(0) translateX(1px)}
+    83%{transform:rotate(-6deg) translateY(-1px) translateX(-1px)}
+  }
+
+  /* GIRL RIGHT ARM */
+  @keyframes girl-arm-right-dance{
+    0%,100%{transform:rotate(0deg) translateY(0) translateX(0)}
+    16%{transform:rotate(3deg) translateY(1px) translateX(-1px)}
+    33%{transform:rotate(-6deg) translateY(-1px) translateX(1px)}
+    50%{transform:rotate(4deg) translateY(0) translateX(-1px)}
+    66%{transform:rotate(-3deg) translateY(2px) translateX(0)}
+    83%{transform:rotate(5deg) translateY(-1px) translateX(1px)}
+  }
+
+  /* GIRL LEGS — graceful step */
+  @keyframes girl-legs-dance{
+    0%,100%{transform:translateX(-50%) translateY(0) skewX(0deg)}
+    25%{transform:translateX(-50%) translateY(-2px) skewX(-0.6deg)}
+    50%{transform:translateX(-50%) translateY(1px) skewX(0.4deg)}
+    75%{transform:translateX(-50%) translateY(-3px) skewX(-0.3deg)}
+  }
+
+  /* ========================================
+     APPLY ANIMATIONS — IDLE STATE (paused)
+     ======================================== */
+  .character .seg.head{animation:var(--head-anim) calc(1.2s / var(--dance-speed)) steps(8,end) infinite paused}
+  .character .seg.torso{animation:var(--torso-anim) calc(1.6s / var(--dance-speed)) steps(4,end) infinite paused}
+  .character .seg.arm-left{animation:var(--arm-left-anim) calc(1.0s / var(--dance-speed)) steps(5,end) infinite paused}
+  .character .seg.arm-right{animation:var(--arm-right-anim) calc(1.0s / var(--dance-speed)) steps(5,end) infinite paused}
+  .character .seg.legs{animation:var(--legs-anim) calc(0.8s / var(--dance-speed)) steps(5,end) infinite paused}
+
+  /* Assign per-character animation custom properties */
+  .character.boy{
+    --head-anim:boy-head-dance;
+    --torso-anim:boy-torso-dance;
+    --arm-left-anim:boy-arm-left-dance;
+    --arm-right-anim:boy-arm-right-dance;
+    --legs-anim:boy-legs-dance;
+  }
+  .character.girl{
+    --head-anim:girl-head-dance;
+    --torso-anim:girl-torso-dance;
+    --arm-left-anim:girl-arm-left-dance;
+    --arm-right-anim:girl-arm-right-dance;
+    --legs-anim:girl-legs-dance;
+    --dance-speed:1.15;
+  }
+
+  /* ========================================
+     PLAYING STATE — unpause all animations
+     ======================================== */
+  .stage.playing .character .seg{
+    animation-play-state:running;
+  }
+
+  /* ========================================
+     PAUSE TRANSITION — subtle shrink
+     ======================================== */
+  .character{transition:filter .4s ease}
+  .stage:not(.playing) .character{filter:brightness(.6)}
+  .stage.playing .character{filter:brightness(1)}
+
+  /* ========================================
+     CONTROLS
+     ======================================== */
+  .controls{
+    position:fixed;bottom:0;left:0;right:0;
+    padding:1rem 1.5rem calc(1rem + env(safe-area-inset-bottom,0px));
+    display:flex;align-items:center;justify-content:center;gap:1rem;
+    background:linear-gradient(to top,rgba(10,10,26,.95),transparent);
+    z-index:20;
+  }
+  .ctrl-btn{
+    width:56px;height:56px;border-radius:50%;border:none;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;transition:all .2s;font-size:1.4rem;
+  }
+  .ctrl-btn.play{
+    background:linear-gradient(135deg,#7c3aed,#a78bfa);
+    color:#fff;box-shadow:0 4px 24px rgba(124,58,237,.4);
+  }
+  .ctrl-btn.play:hover{transform:scale(1.08)}
+  .ctrl-btn.play:active{transform:scale(.95)}
+  .ctrl-btn.secondary{
+    background:rgba(255,255,255,.08);color:#9ca3af;
+    border:1px solid rgba(255,255,255,.1);
+  }
+  .ctrl-btn.secondary:hover{background:rgba(255,255,255,.12);color:#fff}
+  .track-info{
+    position:fixed;bottom:80px;left:0;right:0;
+    text-align:center;z-index:18;pointer-events:none;
+  }
+  .track-title{font-size:.75rem;font-weight:600;color:#e5e7eb}
+  .track-artist{font-size:.6rem;color:#6b7280;margin-top:2px}
+
+  /* ========================================
+     SHADOW BENEATH CHARACTERS
+     ======================================== */
+  .shadow{
+    position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);
+    width:60px;height:10px;border-radius:50%;
+    background:rgba(0,0,0,.35);filter:blur(4px);
+  }
+  .character.playing-active .shadow{
+    animation:shadow-pulse 1.2s ease infinite;
+  }
+  @keyframes shadow-pulse{
+    0%,100%{transform:translateX(-50%) scaleX(1);opacity:.35}
+    50%{transform:translateX(-50%) scaleX(.85);opacity:.2}
+  }
+
+  /* ========================================
+     BEAT INDICATOR DOTS
+     ======================================== */
+  .beat-dots{
+    position:fixed;top:60px;right:1rem;z-index:20;
+    display:flex;flex-direction:column;gap:6px;
+  }
+  .beat-dot{
+    width:6px;height:6px;border-radius:50%;
+    background:rgba(255,255,255,.15);transition:all .15s;
+  }
+  .beat-dot.active{background:#a78bfa;box-shadow:0 0 8px rgba(167,139,250,.6)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Dance <span>Demo 3</span></h1>
+  <span id="status-pill" class="status-pill idle">IDLE</span>
+</div>
+
+<div class="beat-dots" id="beat-dots">
+  <div class="beat-dot" data-i="0"></div>
+  <div class="beat-dot" data-i="1"></div>
+  <div class="beat-dot" data-i="2"></div>
+  <div class="beat-dot" data-i="3"></div>
+</div>
+
+<div class="youtube-container">
+  <div id="youtube-player"></div>
+</div>
+
+<div class="stage" id="stage">
+  <div class="spotlight boy-glow"></div>
+  <div class="spotlight girl-glow"></div>
+  <div class="floor"></div>
+
+  <!-- ====== BOY PUPPET ====== -->
+  <div class="character boy" id="boy">
+    <div class="seg head">
+      <div class="skull"></div>
+      <div class="face"></div>
+      <div class="eye l"></div>
+      <div class="eye r"></div>
+    </div>
+    <div class="seg torso">
+      <div class="chest"></div>
+    </div>
+    <div class="seg arm-left">
+      <div class="upper"></div>
+      <div class="lower"></div>
+      <div class="hand"></div>
+    </div>
+    <div class="seg arm-right">
+      <div class="upper"></div>
+      <div class="lower"></div>
+      <div class="hand"></div>
+    </div>
+    <div class="seg legs">
+      <div class="leg left"></div>
+      <div class="leg right"></div>
+      <div class="foot left"></div>
+      <div class="foot right"></div>
+    </div>
+    <div class="shadow"></div>
+  </div>
+
+  <!-- ====== GIRL PUPPET ====== -->
+  <div class="character girl" id="girl">
+    <div class="seg head">
+      <div class="skull"></div>
+      <div class="face"></div>
+      <div class="eye l"></div>
+      <div class="eye r"></div>
+    </div>
+    <div class="seg torso">
+      <div class="chest"></div>
+    </div>
+    <div class="seg arm-left">
+      <div class="upper"></div>
+      <div class="lower"></div>
+      <div class="hand"></div>
+    </div>
+    <div class="seg arm-right">
+      <div class="upper"></div>
+      <div class="lower"></div>
+      <div class="hand"></div>
+    </div>
+    <div class="seg legs">
+      <div class="leg left"></div>
+      <div class="leg right"></div>
+      <div class="foot left"></div>
+      <div class="foot right"></div>
+    </div>
+    <div class="shadow"></div>
+  </div>
+</div>
+
+<div class="track-info">
+  <div class="track-title" id="track-title">No track loaded</div>
+  <div class="track-artist" id="track-artist">Press play to start</div>
+</div>
+
+<div class="controls">
+  <button class="ctrl-btn secondary" id="btn-prev" title="Previous">&#9198;</button>
+  <button class="ctrl-btn play" id="btn-play" title="Play / Pause">&#9654;</button>
+  <button class="ctrl-btn secondary" id="btn-next" title="Next">&#9197;</button>
+</div>
+
+<script>
+/* ============================================================
+   YouTube IFrame API — integration preserved exactly
+   ============================================================ */
+const PLAYLIST = [
+  { id:'kJQP7kiw5Fk', title:'Despacito', artist:'Luis Fonsi ft. Daddy Yankee' },
+  { id:'JGwWNGJdvx8', title:'Shape of You', artist:'Ed Sheeran' },
+  { id:'RgKAFK5djSk', title:'See You Again', artist:'Wiz Khalifa ft. Charlie Puth' },
+  { id:'fJ9rUzIMcZQ', title:'Bohemian Rhapsody', artist:'Queen' },
+  { id:'hT_nvWreIhg', title:'One Kiss', artist:'Calvin Harris & Dua Lipa' },
+];
+
+let player = null;
+let currentTrack = 0;
+let isPlaying = false;
+let beatInterval = null;
+
+function onYouTubeIframeAPIReady() {
+  player = new YT.Player('youtube-player', {
+    height:'100%', width:'100%',
+    videoId: PLAYLIST[0].id,
+    playerVars:{
+      autoplay:0, controls:1, modestbranding:1,
+      rel:0, fs:0, iv_load_policy:3,
+      playsinline:1, origin: location.origin,
+    },
+    events:{
+      onStateChange: onPlayerStateChange,
+    },
+  });
+}
+
+function onPlayerStateChange(e) {
+  if (e.data === YT.PlayerState.PLAYING) {
+    startDance();
+  } else if (e.data === YT.PlayerState.PAUSED) {
+    pauseDance();
+  } else if (e.data === YT.PlayerState.ENDED) {
+    nextTrack();
+  }
+}
+
+function loadTrack(index) {
+  currentTrack = ((index % PLAYLIST.length) + PLAYLIST.length) % PLAYLIST.length;
+  const t = PLAYLIST[currentTrack];
+  document.getElementById('track-title').textContent = t.title;
+  document.getElementById('track-artist').textContent = t.artist;
+  if (player && player.loadVideoById) {
+    player.loadVideoById(t.id);
+  }
+}
+
+function nextTrack() { loadTrack(currentTrack + 1); }
+function prevTrack() { loadTrack(currentTrack - 1); }
+
+/* ============================================================
+   Dance state — toggles CSS animation-play-state
+   ============================================================ */
+const stage = document.getElementById('stage');
+const pill = document.getElementById('status-pill');
+const playBtn = document.getElementById('btn-play');
+const boyEl = document.getElementById('boy');
+const girlEl = document.getElementById('girl');
+
+function startDance() {
+  isPlaying = true;
+  stage.classList.add('playing');
+  boyEl.classList.add('playing-active');
+  girlEl.classList.add('playing-active');
+  pill.className = 'status-pill playing';
+  pill.textContent = 'PLAYING';
+  playBtn.innerHTML = '&#9646;&#9646;';
+  startBeatIndicator();
+}
+
+function pauseDance() {
+  isPlaying = false;
+  stage.classList.remove('playing');
+  boyEl.classList.remove('playing-active');
+  girlEl.classList.remove('playing-active');
+  pill.className = 'status-pill idle';
+  pill.textContent = 'PAUSED';
+  playBtn.innerHTML = '&#9654;';
+  stopBeatIndicator();
+}
+
+function togglePlay() {
+  if (!player) return;
+  const state = player.getPlayerState();
+  if (state === YT.PlayerState.PLAYING) {
+    player.pauseVideo();
+  } else {
+    player.playVideo();
+  }
+}
+
+/* ============================================================
+   Beat indicator dots — visual rhythm feedback
+   ============================================================ */
+const dots = document.querySelectorAll('.beat-dot');
+let beatIdx = 0;
+
+function startBeatIndicator() {
+  stopBeatIndicator();
+  beatInterval = setInterval(() => {
+    dots.forEach(d => d.classList.remove('active'));
+    dots[beatIdx % 4].classList.add('active');
+    beatIdx++;
+  }, 250);
+}
+
+function stopBeatIndicator() {
+  clearInterval(beatInterval);
+  dots.forEach(d => d.classList.remove('active'));
+  beatIdx = 0;
+}
+
+/* ============================================================
+   Controls
+   ============================================================ */
+document.getElementById('btn-play').addEventListener('click', togglePlay);
+document.getElementById('btn-next').addEventListener('click', () => {
+  nextTrack();
+  if (isPlaying && player) player.playVideo();
+});
+document.getElementById('btn-prev').addEventListener('click', () => {
+  prevTrack();
+  if (isPlaying && player) player.playVideo();
+});
+
+/* ============================================================
+   Load YouTube IFrame API
+   ============================================================ */
+const tag = document.createElement('script');
+tag.src = 'https://www.youtube.com/iframe_api';
+document.head.appendChild(tag);
+
+/* Init track info */
+document.getElementById('track-title').textContent = PLAYLIST[0].title;
+document.getElementById('track-artist').textContent = PLAYLIST[0].artist;
+</script>
+</body>
+</html>

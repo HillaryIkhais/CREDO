@@ -198,9 +198,20 @@ const app = {
     this.state.phase = 'idle';
     document.getElementById('verdict-safe').classList.add('hidden');
     document.getElementById('verdict-fake').classList.add('hidden');
-    document.getElementById('ai-panel').classList.add('hidden');
-    document.getElementById('ocr-display').classList.add('hidden');
-    document.getElementById('scan-line').classList.remove('active');
+    const aiPanel = document.getElementById('ai-panel');
+    const ocrDisplay = document.getElementById('ocr-display');
+    const scanLine = document.getElementById('scan-line');
+    const scanFrame = document.getElementById('scan-frame');
+    const scanFooter = document.querySelector('.scan-footer');
+    const scanToolbar = document.querySelector('.scan-toolbar');
+    const scanHeader = document.querySelector('.scan-header');
+    if (aiPanel) { aiPanel.style.display = ''; aiPanel.classList.add('hidden'); }
+    if (ocrDisplay) { ocrDisplay.style.display = ''; ocrDisplay.classList.add('hidden'); }
+    if (scanLine) { scanLine.style.display = ''; scanLine.classList.remove('active'); }
+    if (scanFrame) scanFrame.style.display = '';
+    if (scanFooter) scanFooter.style.display = '';
+    if (scanToolbar) scanToolbar.style.display = '';
+    if (scanHeader) scanHeader.style.display = '';
     document.getElementById('scan-status').textContent = this.state.demoMode ? 'TAP TO SCAN' : 'ALIGN MEDICATION';
     for (let i = 1; i <= 5; i++) {
       const el = document.getElementById('step-' + i);
@@ -210,6 +221,11 @@ const app = {
     if (this.state.demoMode) {
       const nextScan = this.DEMO_SCANS[this.state.demoIndex % this.DEMO_SCANS.length];
       this.setDemoPackage(nextScan.batch);
+      const demoPkg = document.getElementById('demo-package');
+      if (demoPkg) demoPkg.style.display = '';
+      const demoOverlay = document.getElementById('demo-overlay');
+      if (demoOverlay) demoOverlay.style.display = '';
+      document.getElementById('scan-frame').style.display = 'none';
       document.getElementById('demo-overlay').onclick = () => this.triggerDemoScan();
     }
   },
@@ -267,6 +283,25 @@ const app = {
     const info = this.DEMO_BATCHES[batch];
     const isFake = info && info.status === 'counterfeit';
     const netStatus = this.state.online ? 'ONLINE' : 'OFFLINE';
+
+    const demoPkg = document.getElementById('demo-package');
+    const aiPanel = document.getElementById('ai-panel');
+    const ocrDisplay = document.getElementById('ocr-display');
+    const scanLine = document.getElementById('scan-line');
+    const scanFrame = document.getElementById('scan-frame');
+    const scanFooter = document.querySelector('.scan-footer');
+    const scanToolbar = document.querySelector('.scan-toolbar');
+    const scanHeader = document.querySelector('.scan-header');
+    if (demoPkg) demoPkg.style.display = 'none';
+    if (aiPanel) aiPanel.style.display = 'none';
+    if (ocrDisplay) ocrDisplay.style.display = 'none';
+    if (scanLine) scanLine.style.display = 'none';
+    if (scanFrame) scanFrame.style.display = 'none';
+    if (scanFooter) scanFooter.style.display = 'none';
+    if (scanToolbar) scanToolbar.style.display = 'none';
+    if (scanHeader) scanHeader.style.display = 'none';
+    const demoOverlay = document.getElementById('demo-overlay');
+    if (demoOverlay) demoOverlay.style.display = 'none';
 
     if (isFake) {
       document.getElementById('v-batch-fake').textContent = batch;
