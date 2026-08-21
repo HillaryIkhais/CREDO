@@ -1,4 +1,4 @@
-const CACHE_NAME = 'credo-v4';
+const CACHE_NAME = 'credo-v5';
 const ASSETS = [
   '/',
   '/index.html',

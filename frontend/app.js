@@ -1,5 +1,13 @@
 const API_URL = 'https://credo-g5k2.onrender.com/api/v1';
 
+const DEMO_BATCHES = {
+    'VALID123': { drug: 'Combisunate 20/120' },
+    'VALID456': { drug: 'Paracetamol 500mg' },
+    'VALID802': { drug: 'Amatem Softgel' },
+    'FAKE001': { drug: 'Amoxicillin 500mg', message: 'NAFDAC alert: batch recalled — confirmed falsified.' },
+    'CNTF789': { drug: 'Artemether/Lumefantrine', message: 'Counterfeit batch circulating in Lagos markets.' }
+};
+
 const app = {
     state: {
         currentView: 'home',
@@ -17,7 +25,9 @@ const app = {
         manualEntryResolve: null,
         onboardingPage: 1,
         onboardingComplete: localStorage.getItem('onboardingComplete') === 'true',
-        demoMode: new URLSearchParams(window.location.search).get('demo') === 'true',
+        demoMode: localStorage.getItem('demoMode') === 'true' || new URLSearchParams(window.location.search).get('demo') === 'true',
+        mockTelemetry: [],
+        demoTimer: null,
         demoScans: [
             { drug: 'Combisunate 20/120', batch: 'VALID123', verdict: 'SAFE', message: 'Medicine verified as safe.' },
             { drug: 'Amoxicillin 500mg', batch: 'FAKE001', verdict: 'COUNTERFEIT', message: 'Batch number FAKE001 flagged as counterfeit by NAFDAC.' },
@@ -67,6 +77,7 @@ const app = {
             });
         },
         sync: async () => {
+            if (app.state.demoMode) return;
             try {
                 document.getElementById('sync-badge').classList.add('visible');
                 const res = await fetch(`${API_URL}/sync`);
@@ -91,6 +102,17 @@ const app = {
             }
         },
         checkBatch: async (text) => {
+            const clean = String(text).toUpperCase().replace(/\s+/g, '');
+            for (const [batch, info] of Object.entries(DEMO_BATCHES)) {
+                if (clean.includes(batch)) {
+                    return {
+                        verdict: (batch.startsWith('FAKE') || batch.startsWith('CNTF')) ? 'COUNTERFEIT' : 'SAFE',
+                        drug: info.drug,
+                        batch: batch,
+                        message: info.message || 'Medicine verified as safe.'
+                    };
+                }
+            }
             const db = await app.db.init();
             return new Promise((resolve) => {
                 const tx = db.transaction('alerts', 'readonly');
@@ -179,16 +201,14 @@ const app = {
     startDemoScanner: () => {
         app.state.isScanning = true;
         document.getElementById('scan-line').classList.add('animating');
-        document.getElementById('scan-status').innerText = 'ANALYZING BATCH NUMBER (DEMO)';
+        document.getElementById('scan-status').innerText = 'SCANNING BATCH NUMBER';
         document.getElementById('verdict-modal').classList.remove('visible');
         document.getElementById('manual-modal').classList.remove('visible');
         document.getElementById('scan-error').classList.add('hidden');
-        
-        // Hide camera feed, show demo overlay
+
         const video = document.getElementById('camera-feed');
         video.style.display = 'none';
-        
-        // Create or show demo overlay
+
         let demoOverlay = document.getElementById('demo-overlay');
         if (!demoOverlay) {
             demoOverlay = document.createElement('div');
@@ -202,32 +222,34 @@ const app = {
                     <div class="demo-corner bottom-right"></div>
                     <div class="demo-scan-line"></div>
                 </div>
-                <p class="demo-text">DEMO MODE - Tap to simulate scan</p>
+                <p class="demo-pill">DEMO MODE</p>
+                <p class="demo-text">Simulated package scan against NAFDAC sample data.<br>Tap to scan instantly.</p>
             `;
+            demoOverlay.addEventListener('click', () => {
+                if (!app.state.isScanning) return;
+                clearTimeout(app.state.demoTimer);
+                app.simulateDemoScan();
+            });
             document.querySelector('#view-scan .scanner-overlay').prepend(demoOverlay);
-            
-            demoOverlay.addEventListener('click', () => app.simulateDemoScan());
         }
         demoOverlay.style.display = 'flex';
-        
-        // Sync database in background
-        app.db.sync();
+
+        clearTimeout(app.state.demoTimer);
+        app.state.demoTimer = setTimeout(() => app.simulateDemoScan(), 2800);
     },
 
     simulateDemoScan: () => {
+        if (!app.state.isScanning) return;
         const scan = app.state.demoScans[app.state.demoScanIndex];
         app.state.demoScanIndex = (app.state.demoScanIndex + 1) % app.state.demoScans.length;
-        
-        document.getElementById('scan-status').innerText = 'SCAN COMPLETE';
+        document.getElementById('scan-status').innerText = 'ANALYSIS COMPLETE';
         document.getElementById('scan-line').classList.remove('animating');
-        
-        setTimeout(() => {
-            app.handleVerdict(scan);
-        }, 800);
+        setTimeout(() => app.handleVerdict(scan), 650);
     },
     
     stopScanner: () => {
         app.state.isScanning = false;
+        clearTimeout(app.state.demoTimer);
         document.getElementById('scan-line').classList.remove('animating');
         
         // Demo mode cleanup
@@ -487,6 +509,64 @@ handleVerdict: async (match) => {
         app.completeOnboarding();
     },
 
+    toggleDemo: () => {
+        app.state.demoMode = !app.state.demoMode;
+        localStorage.setItem('demoMode', String(app.state.demoMode));
+        app.applyDemoUI();
+        if (app.state.currentView === 'scan') {
+            app.stopScanner();
+            app.startScanner();
+        }
+    },
+
+    enableDemoFromError: () => {
+        if (!app.state.demoMode) {
+            app.state.demoMode = true;
+            localStorage.setItem('demoMode', 'true');
+        }
+        app.applyDemoUI();
+        app.startScanner();
+    },
+
+    applyDemoUI: () => {
+        const badge = document.getElementById('mode-badge');
+        const badgeText = document.getElementById('mode-badge-text');
+        const label = document.getElementById('demo-label');
+        if (app.state.demoMode) {
+            badge?.classList.remove('live');
+            badge?.classList.add('demo');
+            if (badgeText) badgeText.innerText = 'Demo Mode';
+            if (label) label.innerText = 'Exit Demo Mode';
+        } else {
+            badge?.classList.remove('demo');
+            badge?.classList.add('live');
+            if (badgeText) badgeText.innerText = 'Live Sync';
+            if (label) label.innerText = 'Try Live Demo';
+        }
+    },
+
+    getMockTelemetry: () => {
+        if (app.state.mockTelemetry.length > 0) return app.state.mockTelemetry;
+        const seeds = [
+            ['Combisunate 20/120', 'VALID123', 'SAFE', 6.45, 3.39],
+            ['Amoxicillin 500mg', 'FAKE001', 'COUNTERFEIT', 6.60, 3.35],
+            ['Paracetamol 500mg', 'VALID456', 'SAFE', 9.06, 7.49],
+            ['Artemether/Lumefantrine', 'CNTF789', 'COUNTERFEIT', 6.52, 3.38],
+            ['Amatem Softgel', 'VALID802', 'SAFE', 6.46, 3.55],
+            ['Amoxicillin 500mg', 'FAKE001', 'COUNTERFEIT', 6.58, 3.29]
+        ];
+        const now = Date.now();
+        app.state.mockTelemetry = seeds.map((s, i) => ({
+            drug_name: s[0],
+            batch_number: s[1],
+            verdict: s[2],
+            latitude: +(s[3] + (Math.random() - 0.5) * 0.05).toFixed(4),
+            longitude: +(s[4] + (Math.random() - 0.5) * 0.05).toFixed(4),
+            scan_timestamp: new Date(now - (i + 1) * 47 * 60000).toISOString()
+        }));
+        return app.state.mockTelemetry;
+    },
+
     resetScanner: () => {
         document.getElementById('verdict-modal').classList.remove('visible');
         document.getElementById('ocr-debug').classList.remove('visible');
@@ -502,6 +582,11 @@ handleVerdict: async (match) => {
             batch_number: match.batch,
             verdict: match.verdict
         };
+
+        if (app.state.demoMode) {
+            app.state.mockTelemetry.unshift({ ...payload, scan_timestamp: new Date().toISOString() });
+            return;
+        }
         
         try {
             if ("geolocation" in navigator) {
@@ -521,21 +606,34 @@ handleVerdict: async (match) => {
 
     fetchDashboardData: async () => {
         const tbody = document.getElementById('telemetry-table-body');
-        const metricsGrid = document.getElementById('metrics-grid');
-        const errorEl = document.getElementById('dashboard-error');
-        const errorText = document.getElementById('dashboard-error-text');
-        
+        const offlineNote = document.getElementById('dash-offline');
+
+        let data = null;
+        if (app.state.demoMode) {
+            data = app.getMockTelemetry();
+        } else {
+            try {
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 8000);
+                const res = await fetch(`${API_URL}/telemetry/heatmap`, { signal: controller.signal });
+                clearTimeout(timeout);
+                if (!res.ok) throw new Error('Failed to fetch');
+                data = await res.json();
+                if (offlineNote) offlineNote.classList.add('hidden');
+            } catch (e) {
+                data = app.getMockTelemetry();
+                if (offlineNote) offlineNote.classList.remove('hidden');
+            }
+        }
+
         try {
-            const res = await fetch(`${API_URL}/telemetry/heatmap`);
-            if (!res.ok) throw new Error('Failed to fetch');
-            const data = await res.json();
             app.state.telemetry = data;
-            
+
             const total = data.length;
             const fake = data.filter(d => d.verdict === 'COUNTERFEIT').length;
             const rate = total > 0 ? ((fake / total) * 100).toFixed(1) : 0;
-            
-            metricsGrid.innerHTML = `
+
+            document.getElementById('metrics-grid').innerHTML = `
                 <div class="card metric-card">
                     <div class="metric-title">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
@@ -565,7 +663,6 @@ handleVerdict: async (match) => {
                     <p>No telemetry data yet</p>
                     <p style="font-size:0.85rem; margin-top:0.5rem;">Scans from the field will appear here</p>
                 </td></tr>`;
-                errorEl.classList.add('hidden');
                 return;
             }
             
@@ -578,30 +675,8 @@ handleVerdict: async (match) => {
                     <td><span class="badge ${t.verdict === 'COUNTERFEIT' ? 'badge-fake' : 'badge-safe'}">${t.verdict}</span></td>
                 </tr>
             `).join('');
-            errorEl.classList.add('hidden');
         } catch (e) {
             console.error(e);
-            metricsGrid.innerHTML = `
-                <div class="card metric-card skeleton" aria-hidden="true">
-                    <div class="metric-title skeleton-text"></div>
-                    <div class="metric-value skeleton-text"></div>
-                </div>
-                <div class="card metric-card border-danger skeleton" aria-hidden="true">
-                    <div class="metric-title skeleton-text"></div>
-                    <div class="metric-value skeleton-text"></div>
-                </div>
-                <div class="card metric-card skeleton" aria-hidden="true">
-                    <div class="metric-title skeleton-text"></div>
-                    <div class="metric-value skeleton-text"></div>
-                </div>
-            `;
-            tbody.innerHTML = `
-                <tr class="skeleton-row" aria-hidden="true"><td colspan="5"><div class="skeleton-row-inner"></div></td></tr>
-                <tr class="skeleton-row" aria-hidden="true"><td colspan="5"><div class="skeleton-row-inner"></div></td></tr>
-                <tr class="skeleton-row" aria-hidden="true"><td colspan="5"><div class="skeleton-row-inner"></div></td></tr>
-            `;
-            errorText.innerText = 'Failed to load dashboard data. Check your connection.';
-            errorEl.classList.remove('hidden');
         }
     },
 
@@ -642,6 +717,7 @@ handleVerdict: async (match) => {
 
 // Initialize
 window.onload = () => {
+    app.applyDemoUI();
     app.initOnboarding();
     app.navigate('home');
     
