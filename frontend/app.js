@@ -131,6 +131,7 @@ const app = {
       scanFrame.style.display = 'none';
       liveBadge.style.display = 'none';
       offlineBadge.classList.add('hidden');
+      this.setDemoPackage(this.DEMO_SCANS[0].batch);
       document.getElementById('demo-overlay').onclick = () => this.triggerDemoScan();
     } else {
       label.textContent = 'Try Live Demo';
@@ -149,6 +150,7 @@ const app = {
     document.getElementById('scan-frame').style.display = 'none';
     document.getElementById('live-badge').style.display = 'none';
     document.getElementById('offline-badge').classList.add('hidden');
+    this.setDemoPackage(this.DEMO_SCANS[0].batch);
     document.getElementById('demo-overlay').onclick = () => this.triggerDemoScan();
   },
 
@@ -178,6 +180,19 @@ const app = {
     }
   },
 
+  setDemoPackage(batch) {
+    const info = this.DEMO_BATCHES[batch];
+    if (!info) return;
+    const expParts = (info.expiry || '2025-12-31').split('-');
+    const expStr = expParts[1] + '/' + expParts[0].slice(2);
+    const el = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
+    el('pkg-drug', info.drug);
+    el('pkg-dose', info.dose + ' Tablets');
+    el('pkg-mfg', info.manufacturer);
+    el('pkg-batch', batch);
+    el('pkg-exp', expStr);
+  },
+
   resetScanner() {
     this.state.scanning = false;
     this.state.phase = 'idle';
@@ -193,6 +208,8 @@ const app = {
       el.querySelector('.step-icon').textContent = '\u25CB';
     }
     if (this.state.demoMode) {
+      const nextScan = this.DEMO_SCANS[this.state.demoIndex % this.DEMO_SCANS.length];
+      this.setDemoPackage(nextScan.batch);
       document.getElementById('demo-overlay').onclick = () => this.triggerDemoScan();
     }
   },
@@ -207,7 +224,10 @@ const app = {
     const scanLine = document.getElementById('scan-frame').querySelector('.scan-line') || document.getElementById('scan-line');
 
     document.getElementById('scan-status').textContent = 'CAPTURING IMAGE';
+    const pkg = document.getElementById('demo-package');
+    if (pkg) pkg.style.animation = 'pkgFlash 0.3s ease';
     await this.sleep(600);
+    if (pkg) pkg.style.animation = '';
 
     document.getElementById('scan-status').textContent = 'PROCESSING';
     const aiPanel = document.getElementById('ai-panel');

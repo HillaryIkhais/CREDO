@@ -243,3 +243,71 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
   .dash-metrics{grid-template-columns:1fr}
   .arch-grid{grid-template-columns:1fr}
 }
+
+.demo-package{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:260px;z-index:4;
+  background:linear-gradient(145deg,#f5f0e8 0%,#e8e0d0 50%,#ddd5c5 100%);
+  border-radius:6px;overflow:hidden;
+  box-shadow:0 8px 32px rgba(0,0,0,.6),0 2px 8px rgba(0,0,0,.3);
+  border:1px solid rgba(0,0,0,.08);
+}
+.pkg-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px 6px;
+}
+.pkg-logo{
+  width:32px;height:32px;border-radius:4px;
+  background:linear-gradient(135deg,#1a5276,#2e86c1);
+  color:white;font-size:14px;font-weight:900;
+  display:flex;align-items:center;justify-content:center;
+  font-family:serif;letter-spacing:-.5px;
+}
+.pkg-brand{
+  font-size:6px;font-weight:700;color:#1a5276;
+  text-transform:uppercase;letter-spacing:.5px;
+  border:1px solid #1a5276;padding:2px 5px;border-radius:2px;
+}
+.pkg-body{padding:4px 14px 12px}
+.pkg-drug{
+  font-size:16px;font-weight:800;color:#1a1a1a;
+  font-family:'Inter',sans-serif;line-height:1.1;
+}
+.pkg-dose{
+  font-size:11px;font-weight:500;color:#555;margin-top:2px;
+  font-family:'Inter',sans-serif;
+}
+.pkg-mfg{
+  font-size:8px;color:#777;margin-top:3px;
+  font-family:'Inter',sans-serif;text-transform:uppercase;letter-spacing:.3px;
+}
+.pkg-divider{
+  height:1px;background:linear-gradient(90deg,transparent,rgba(0,0,0,.12),transparent);
+  margin:8px 0;
+}
+.pkg-row{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:3px;
+}
+.pkg-key{
+  font-size:7px;color:#888;text-transform:uppercase;
+  letter-spacing:.4px;font-family:'Inter',sans-serif;
+}
+.pkg-val{
+  font-size:10px;font-weight:700;color:#1a1a1a;
+  font-family:'Courier New',monospace;letter-spacing:.5px;
+}
+.pkg-barcode{
+  display:flex;gap:1.5px;justify-content:center;
+  margin-top:8px;height:28px;align-items:stretch;
+}
+.pkg-barcode span{
+  display:block;background:#1a1a1a;border-radius:1px;
+}
+.pkg-barcode span:nth-child(odd){width:2px}
+.pkg-barcode span:nth-child(even){width:1px}
+.pkg-barcode span:nth-child(3n){width:3px}
+.pkg-barcode span:nth-child(5n){width:1.5px}
+.pkg-barcode span:nth-child(7n){background:transparent}
+
+@keyframes pkgFlash{0%,100%{opacity:1}50%{opacity:.6}}
