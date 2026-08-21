@@ -333,20 +333,36 @@ body {
 .scan-error-actions .btn-outline { background: rgba(255,255,255,0.06); border: 1px solid var(--border-strong); color: var(--text-primary); }
 .scan-error-actions .btn-primary { background: var(--vermilion); color: white; }
 
-/* Demo Mode Package */
-.demo-package {
-  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  width: 250px; padding: 20px 24px;
-  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 10px; z-index: 2;
-}
-.pkg-title { font-size: 0.55rem; font-weight: 800; color: rgba(255,255,255,0.35); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 6px; }
-.pkg-name { font-size: 0.95rem; font-weight: 700; color: rgba(255,255,255,0.7); margin-bottom: 2px; }
-.pkg-batch { font-family: 'SF Mono', monospace; font-size: 0.8rem; font-weight: 700; color: var(--vermilion); letter-spacing: 0.08em; margin-bottom: 10px; opacity: 0.7; }
-.pkg-line { height: 2px; background: rgba(255,255,255,0.06); border-radius: 1px; margin-bottom: 4px; }
-.pkg-line.w60 { width: 60%; }
-.pkg-line.w80 { width: 80%; }
 .demo-frame.detected .frame-corner { border-color: var(--vermilion); }
+
+/* Demo mode: simulate a real medicine package surface */
+.scan-viewport.demo-bg {
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(30,40,55,0.8) 0%, #090e14 70%);
+}
+.demo-package {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 300px;
+  background: linear-gradient(145deg, #1a2332 0%, #141c28 50%, #111920 100%);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 28px 24px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04);
+  z-index: 2;
+}
+.pkg-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+.pkg-logo { font-size: 0.5rem; font-weight: 900; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 3px 8px; border-radius: 4px; }
+.pkg-nafdac { font-size: 0.45rem; font-weight: 700; letter-spacing: 0.12em; color: rgba(255,107,53,0.5); }
+.pkg-name { font-size: 1.1rem; font-weight: 800; color: rgba(255,255,255,0.75); letter-spacing: -0.01em; margin-bottom: 2px; }
+.pkg-dose { font-size: 0.75rem; font-weight: 600; color: rgba(255,255,255,0.35); margin-bottom: 14px; }
+.pkg-divider { height: 1px; background: rgba(255,255,255,0.06); margin-bottom: 12px; }
+.pkg-meta { display: flex; justify-content: space-between; align-items: flex-end; }
+.pkg-batch { font-family: 'SF Mono', monospace; font-size: 0.85rem; font-weight: 700; color: rgba(255,255,255,0.6); letter-spacing: 0.1em; }
+.pkg-exp { font-size: 0.6rem; font-weight: 600; color: rgba(255,255,255,0.2); text-transform: uppercase; letter-spacing: 0.08em; }
+.pkg-barcode { display: flex; gap: 1.5px; margin-top: 16px; justify-content: center; }
+.pkg-bar { height: 28px; background: rgba(255,255,255,0.06); border-radius: 1px; }
 
 /* Demo Overlay */
 .demo-overlay {

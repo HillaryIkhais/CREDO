@@ -179,7 +179,48 @@ const app = {
         if (!pkg) {
             pkg = document.createElement('div');
             pkg.className = 'demo-package';
-            pkg.innerHTML = '<div class="pkg-title">Pharmaceutical Product</div><div class="pkg-name">Combisunate 20/120</div><div class="pkg-batch">Batch: VALID123</div><div class="pkg-line w80"></div><div class="pkg-line w60"></div><div class="pkg-line w80"></div>';
+            pkg.innerHTML = `
+                <div class="pkg-top">
+                    <div>
+                        <div class="pkg-logo">PHARMA</div>
+                    </div>
+                    <div class="pkg-nafdac">NAFDAC REG</div>
+                </div>
+                <div class="pkg-name">Combisunate</div>
+                <div class="pkg-dose">Artemether 20mg + Lumefantrine 120mg</div>
+                <div class="pkg-divider"></div>
+                <div class="pkg-meta">
+                    <div class="pkg-batch" id="pkg-batch-text">VALID123</div>
+                    <div class="pkg-exp">EXP 08/2027</div>
+                </div>
+                <div class="pkg-barcode">
+                    <div class="pkg-bar" style="width:2px"></div>
+                    <div class="pkg-bar" style="width:1px"></div>
+                    <div class="pkg-bar" style="width:3px"></div>
+                    <div class="pkg-bar" style="width:1px"></div>
+                    <div class="pkg-bar" style="width:2px"></div>
+                    <div class="pkg-bar" style="width:1px"></div>
+                    <div class="pkg-bar" style="width:3px"></div>
+                    <div class="pkg-bar" style="width:1px"></div>
+                    <div class="pkg-bar" style="width:2px"></div>
+                    <div class="pkg-bar" style="width:3px"></div>
+                    <div class="pkg-bar" style="width:1px"></div>
+                    <div class="pkg-bar" style="width:2px"></div>
+                    <div class="pkg-bar" style="width:1px"></div>
+                    <div class="pkg-bar" style="width:3px"></div>
+                    <div class="pkg-bar" style="width:1px"></div>
+                    <div class="pkg-bar" style="width:2px"></div>
+                    <div class="pkg-bar" style="width:1px"></div>
+                    <div class="pkg-bar" style="width:3px"></div>
+                    <div class="pkg-bar" style="width:2px"></div>
+                    <div class="pkg-bar" style="width:1px"></div>
+                    <div class="pkg-bar" style="width:2px"></div>
+                    <div class="pkg-bar" style="width:3px"></div>
+                    <div class="pkg-bar" style="width:1px"></div>
+                    <div class="pkg-bar" style="width:2px"></div>
+                    <div class="pkg-bar" style="width:1px"></div>
+                    <div class="pkg-bar" style="width:3px"></div>
+                </div>`;
             vp.appendChild(pkg);
         }
         pkg.style.display = '';
@@ -206,8 +247,14 @@ const app = {
         const demoSweep = document.querySelector('.demo-overlay .scan-line');
         if (demoSweep) demoSweep.style.animation = 'none';
         document.querySelector('.demo-frame').classList.add('detected');
-        const pkgBatch = document.querySelector('.pkg-batch');
-        if (pkgBatch) pkgBatch.textContent = `Batch: ${batch}`;
+        const pkgBatch = document.getElementById('pkg-batch-text');
+        if (pkgBatch) {
+            pkgBatch.textContent = batch;
+            pkgBatch.style.color = scan.verdict === 'COUNTERFEIT' ? 'var(--red)' : 'var(--vermilion)';
+        }
+        document.querySelector('.demo-package').style.boxShadow = scan.verdict === 'COUNTERFEIT'
+            ? '0 0 40px rgba(239,68,68,0.3), 0 30px 80px rgba(0,0,0,0.6)'
+            : '0 0 40px rgba(255,107,53,0.3), 0 30px 80px rgba(0,0,0,0.6)';
         document.getElementById('scan-status').textContent = 'BATCH DETECTED';
 
         app.state.phaseTimer = setTimeout(() => {
