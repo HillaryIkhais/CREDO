@@ -147,6 +147,11 @@ const app = {
         document.getElementById('scan-line').classList.remove('sweep');
         document.getElementById('batch-label').classList.add('hidden');
         document.getElementById('scan-frame').classList.remove('detected');
+        const demoFrame = document.querySelector('.demo-frame');
+        if (demoFrame) demoFrame.classList.remove('detected');
+        const pkg = document.querySelector('.demo-package');
+        if (pkg) pkg.style.display = 'none';
+        document.querySelector('.scan-viewport').classList.remove('demo-bg');
         document.getElementById('ai-panel').classList.add('hidden');
         document.getElementById('ai-panel').classList.remove('visible');
         document.getElementById('verdict-safe').classList.add('hidden');
@@ -166,8 +171,20 @@ const app = {
         video.style.display = 'none';
         video.srcObject = null;
         document.getElementById('scan-error').classList.add('hidden');
+        document.getElementById('scan-frame').style.display = 'none';
+
+        const vp = document.querySelector('.scan-viewport');
+        vp.classList.add('demo-bg');
+        let pkg = document.querySelector('.demo-package');
+        if (!pkg) {
+            pkg = document.createElement('div');
+            pkg.className = 'demo-package';
+            pkg.innerHTML = '<div class="pkg-title">Pharmaceutical Product</div><div class="pkg-name">Combisunate 20/120</div><div class="pkg-batch">Batch: VALID123</div><div class="pkg-line w80"></div><div class="pkg-line w60"></div><div class="pkg-line w80"></div>';
+            vp.appendChild(pkg);
+        }
+        pkg.style.display = '';
+
         document.getElementById('demo-overlay').classList.remove('hidden');
-        document.getElementById('scan-line').classList.add('sweep');
         document.getElementById('scan-status').textContent = 'SCANNING PACKAGE...';
 
         const overlay = document.getElementById('demo-overlay');
@@ -184,13 +201,13 @@ const app = {
         if (!app.state.isScanning) return;
         const scan = app.state.demoScans[app.state.demoScanIndex];
         const batch = scan.batch;
-        const isFake = scan.verdict === 'COUNTERFEIT';
 
         app.state.scanPhase = 'detected';
-        document.getElementById('scan-line').classList.remove('sweep');
-        document.getElementById('scan-frame').classList.add('detected');
-        document.getElementById('batch-label').classList.remove('hidden');
-        document.getElementById('batch-value').textContent = batch;
+        const demoSweep = document.querySelector('.demo-overlay .scan-line');
+        if (demoSweep) demoSweep.style.animation = 'none';
+        document.querySelector('.demo-frame').classList.add('detected');
+        const pkgBatch = document.querySelector('.pkg-batch');
+        if (pkgBatch) pkgBatch.textContent = `Batch: ${batch}`;
         document.getElementById('scan-status').textContent = 'BATCH DETECTED';
 
         app.state.phaseTimer = setTimeout(() => {
@@ -250,6 +267,11 @@ const app = {
 
     handleVerdict: async (match) => {
         app.stopScanner();
+        document.getElementById('scan-frame').style.display = '';
+        document.getElementById('demo-overlay').classList.add('hidden');
+        document.querySelector('.scan-viewport').classList.remove('demo-bg');
+        const pkg = document.querySelector('.demo-package');
+        if (pkg) pkg.style.display = 'none';
         document.getElementById('scan-status').textContent = 'ANALYSIS COMPLETE';
         if (navigator.vibrate) navigator.vibrate(match.verdict === 'COUNTERFEIT' ? [100, 50, 100, 50, 200] : [50, 100, 50]);
 
