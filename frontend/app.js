@@ -131,6 +131,7 @@ const app = {
       scanFrame.style.display = 'none';
       liveBadge.style.display = 'none';
       offlineBadge.classList.add('hidden');
+      document.getElementById('camera-feed').style.display = 'none';
       this.setDemoPackage(this.DEMO_SCANS[0].batch);
       document.getElementById('demo-overlay').onclick = () => this.triggerDemoScan();
     } else {
@@ -138,6 +139,7 @@ const app = {
       overlay.classList.add('hidden');
       scanFrame.style.display = '';
       liveBadge.style.display = '';
+      document.getElementById('camera-feed').style.display = '';
       this.stopScanner();
     }
   },
@@ -150,6 +152,7 @@ const app = {
     document.getElementById('scan-frame').style.display = 'none';
     document.getElementById('live-badge').style.display = 'none';
     document.getElementById('offline-badge').classList.add('hidden');
+    document.getElementById('camera-feed').style.display = 'none';
     this.setDemoPackage(this.DEMO_SCANS[0].batch);
     document.getElementById('demo-overlay').onclick = () => this.triggerDemoScan();
   },
