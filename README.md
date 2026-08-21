@@ -41,7 +41,7 @@ uvicorn main:app --reload
 **2. Start the Frontend**
 Because the frontend is pure Vanilla JS, HTML, and CSS, you can serve it with any basic static server.
 ```bash
-cd vanilla_frontend
+cd frontend
 python3 -m http.server 5179
 ```
 Open `http://localhost:5179` in your browser.
