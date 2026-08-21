@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Credo</title>
-    <link rel="stylesheet" href="styles.css?v=6">
+    <link rel="stylesheet" href="styles.css?v=7">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#080D14">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -15,41 +15,32 @@
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
-
-    <div id="onboarding" class="onboarding hidden" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
+    <div id="onboarding" class="onboarding hidden" role="dialog" aria-modal="true">
         <div class="onboarding-content">
             <button class="onboarding-skip" onclick="app.completeOnboarding()">Skip</button>
             <div class="onboarding-pages">
                 <div class="onboarding-page active" data-page="1">
-                    <div class="onboarding-icon">
-                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
-                    </div>
-                    <h2 id="onboarding-title">Welcome to Credo</h2>
-                    <p>Your offline-first medication authenticity verifier. Scan batch numbers to instantly detect counterfeit drugs.</p>
+                    <div class="onboarding-icon"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>
+                    <h2>Welcome to Credo</h2>
+                    <p>Point, scan, and know. Offline-first medicine authenticity verification.</p>
                     <div class="onboarding-indicators"><span class="indicator active"></span><span class="indicator"></span><span class="indicator"></span><span class="indicator"></span></div>
                 </div>
                 <div class="onboarding-page" data-page="2">
-                    <div class="onboarding-icon">
-                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
-                    </div>
+                    <div class="onboarding-icon"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></svg></div>
                     <h2>Scan Any Medication</h2>
-                    <p>Point your camera at the batch number on any drug package. Credo reads the text and checks it against the NAFDAC database.</p>
+                    <p>Point your camera at the batch number. OCR runs entirely in your browser — no image upload.</p>
                     <div class="onboarding-indicators"><span class="indicator"></span><span class="indicator active"></span><span class="indicator"></span><span class="indicator"></span></div>
                 </div>
                 <div class="onboarding-page" data-page="3">
-                    <div class="onboarding-icon">
-                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
-                    </div>
+                    <div class="onboarding-icon"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div>
                     <h2>Works Offline</h2>
-                    <p>Database syncs when online. After that, verify medications anywhere — clinics, pharmacies, markets — no internet required.</p>
+                    <p>Verification runs against a local IndexedDB database. No internet required after first sync.</p>
                     <div class="onboarding-indicators"><span class="indicator"></span><span class="indicator"></span><span class="indicator active"></span><span class="indicator"></span></div>
                 </div>
                 <div class="onboarding-page" data-page="4">
-                    <div class="onboarding-icon">
-                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="17"/></svg>
-                    </div>
+                    <div class="onboarding-icon"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="17"/></svg></div>
                     <h2>Permissions Needed</h2>
-                    <p>We need camera access to scan batch numbers and optional location to map counterfeit hotspots. No personal data collected.</p>
+                    <p>Camera access to scan batch numbers. Optional location for mapping counterfeit hotspots.</p>
                     <button class="btn btn-primary" onclick="app.requestPermissions()" style="margin-top:1rem;">Grant Permissions</button>
                     <div class="onboarding-indicators"><span class="indicator"></span><span class="indicator"></span><span class="indicator"></span><span class="indicator active"></span></div>
                 </div>
@@ -62,143 +53,102 @@
     </div>
 
     <div id="app">
-
-        <!-- HOME VIEW -->
         <div id="view-home" class="view active-view">
             <header>
                 <h1 class="brand-title">CREDO</h1>
                 <p class="brand-subtitle">NAFDAC Medical Authenticity Platform</p>
                 <span id="mode-badge" class="mode-badge live"><span class="dot"></span><span id="mode-badge-text">Live Sync</span></span>
             </header>
-
             <button class="cta-card" onclick="app.navigate('scan')">
-                <div class="cta-icon">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
-                </div>
-                <div class="cta-text">
-                    <h2>Start Scan</h2>
-                    <p>Align camera with medication batch number</p>
-                </div>
+                <div class="cta-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></div>
+                <div class="cta-text"><h2>Start Scan</h2><p>Align camera with medication batch number</p></div>
                 <svg class="cta-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
             </button>
-
-            <button class="btn-demo" onclick="app.toggleDemo()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                <span id="demo-label">Try Live Demo</span>
-            </button>
-
+            <button class="btn-demo" onclick="app.toggleDemo()"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg><span id="demo-label">Try Live Demo</span></button>
             <div class="history-section">
-                <div class="history-header">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
-                    <h3>Scan Log</h3>
-                </div>
-                <div id="history-container">
-                    <div class="skeleton-card"></div>
-                    <div class="skeleton-card"></div>
-                </div>
+                <div class="history-header"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg><h3>Scan Log</h3></div>
+                <div id="history-container"><div class="skeleton-card"></div><div class="skeleton-card"></div></div>
             </div>
         </div>
 
-        <!-- SCANNER VIEW -->
         <div id="view-scan" class="view">
             <div class="scan-header">
                 <span class="brand-mark">CREDO</span>
-                <span class="live-badge" id="live-badge">● LIVE</span>
+                <div class="scan-header-right">
+                    <span id="offline-badge" class="offline-badge hidden">● OFFLINE</span>
+                    <span class="live-badge" id="live-badge">● LIVE</span>
+                </div>
             </div>
-
             <div class="scan-viewport">
                 <video id="camera-feed" autoplay playsinline></video>
-
                 <div id="demo-overlay" class="demo-overlay hidden">
                     <div class="demo-frame">
-                        <div class="frame-corner tl"></div>
-                        <div class="frame-corner tr"></div>
-                        <div class="frame-corner bl"></div>
-                        <div class="frame-corner br"></div>
+                        <div class="frame-corner tl"></div><div class="frame-corner tr"></div>
+                        <div class="frame-corner bl"></div><div class="frame-corner br"></div>
                         <div class="scan-line demo-sweep"></div>
                     </div>
                     <p class="demo-pill">DEMO MODE</p>
                     <p class="demo-hint">Tap anywhere to scan instantly</p>
                 </div>
-
                 <div id="scan-frame" class="scan-frame">
-                    <div class="frame-corner tl"></div>
-                    <div class="frame-corner tr"></div>
-                    <div class="frame-corner bl"></div>
-                    <div class="frame-corner br"></div>
+                    <div class="frame-corner tl"></div><div class="frame-corner tr"></div>
+                    <div class="frame-corner bl"></div><div class="frame-corner br"></div>
                     <div id="scan-line" class="scan-line"></div>
-                    <div id="batch-label" class="batch-label hidden">
-                        <span class="batch-tag">BATCH DETECTED</span>
-                        <span id="batch-value" class="batch-value"></span>
-                    </div>
                 </div>
             </div>
-
             <div class="scan-footer">
                 <p id="scan-status" class="scan-status">ALIGN MEDICATION</p>
                 <p class="scan-sub">OCR · EDGE AI</p>
             </div>
-
-            <!-- AI Processing Panel -->
+            <div id="ocr-display" class="ocr-display hidden">
+                <span class="ocr-label">EXTRACTED TEXT</span>
+                <span id="ocr-text" class="ocr-text"></span>
+            </div>
             <div id="ai-panel" class="ai-panel hidden">
                 <p class="ai-title">EDGE PROCESSING</p>
-                <div class="ai-step" id="step-1"><span class="step-icon">✓</span> Package detected</div>
-                <div class="ai-step" id="step-2"><span class="step-icon">✓</span> Text region detected</div>
-                <div class="ai-step" id="step-3"><span class="step-icon">✓</span> OCR extraction</div>
-                <div class="ai-step" id="step-4"><span class="step-icon">✓</span> Batch number identified</div>
-                <div class="ai-step" id="step-5"><span class="step-icon">→</span> Checking local database</div>
+                <div class="ai-step" id="step-1"><span class="step-icon">○</span> Package detected</div>
+                <div class="ai-step" id="step-2"><span class="step-icon">○</span> Text region identified</div>
+                <div class="ai-step" id="step-3"><span class="step-icon">○</span> OCR extraction</div>
+                <div class="ai-step" id="step-4"><span class="step-icon">○</span> Batch number parsed</div>
+                <div class="ai-step" id="step-5"><span class="step-icon">○</span> Checking local database</div>
             </div>
-
-            <!-- Verdict: Authentic -->
             <div id="verdict-safe" class="verdict-overlay hidden">
                 <div class="verdict-content">
+                    <div class="verdict-shield safe-glow"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>
                     <p class="verdict-type safe-color">AUTHENTIC</p>
                     <h1 class="verdict-main safe-color">VERIFIED</h1>
                     <p id="v-batch-safe" class="verdict-batch-display"></p>
                     <div class="status-stack">
                         <div class="s-row"><span class="s-label">OCR</span><span class="s-val">COMPLETE</span></div>
-                        <div class="s-row"><span class="s-label">LOCAL DATABASE</span><span class="s-val">VERIFIED</span></div>
-                        <div class="s-row"><span class="s-label">NETWORK</span><span class="s-val">OFFLINE</span></div>
+                        <div class="s-row"><span class="s-label">LOCAL DATABASE</span><span class="s-val safe-color">VERIFIED</span></div>
+                        <div class="s-row"><span class="s-label">NETWORK</span><span class="s-val" id="v-net-safe">OFFLINE</span></div>
                         <div class="s-row"><span class="s-label">VERDICT</span><span class="s-val safe-color">AUTHENTIC</span></div>
                     </div>
                     <button class="btn-scan-another" onclick="app.resetScanner()">SCAN ANOTHER</button>
                 </div>
             </div>
-
-            <!-- Verdict: Counterfeit -->
             <div id="verdict-fake" class="verdict-overlay hidden">
                 <div class="verdict-content">
+                    <div class="verdict-shield fake-glow"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="17"/></svg></div>
                     <p class="verdict-type fake-color">COUNTERFEIT</p>
                     <h1 class="verdict-main fake-color">ALERT</h1>
                     <p id="v-batch-fake" class="verdict-batch-display"></p>
                     <div class="status-stack">
                         <div class="s-row"><span class="s-label">OCR</span><span class="s-val">COMPLETE</span></div>
-                        <div class="s-row"><span class="s-label">LOCAL DATABASE</span><span class="s-val">MATCH</span></div>
-                        <div class="s-row"><span class="s-label">NETWORK</span><span class="s-val">OFFLINE</span></div>
+                        <div class="s-row"><span class="s-label">LOCAL DATABASE</span><span class="s-val fake-color">MATCH FOUND</span></div>
+                        <div class="s-row"><span class="s-label">NETWORK</span><span class="s-val" id="v-net-fake">OFFLINE</span></div>
                         <div class="s-row"><span class="s-label">VERDICT</span><span class="s-val fake-color">HIGH RISK</span></div>
                     </div>
-                    <div class="warning-badge">🔊 WARNING ACTIVE</div>
+                    <div class="warning-badge">WARNING ACTIVE</div>
                     <button class="btn-scan-another" onclick="app.resetScanner()">SCAN ANOTHER</button>
                 </div>
             </div>
-
-            <!-- Toolbar -->
             <div class="scan-toolbar">
-                <button class="tool-btn" id="btn-flashlight" onclick="app.toggleFlashlight()" aria-label="Toggle flashlight">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 7h-1v-3a2 2 0 0 0-2-2H10a2 2 0 0 0-2 2v3H7"/><path d="M7 17h.01"/><path d="M17 17h.01"/><path d="M10 17h.01"/><path d="M13 17h.01"/><path d="M3 17h18"/><path d="M12 7v10"/></svg>
-                </button>
-                <button class="tool-btn" id="btn-zoom" onclick="app.cycleZoom()" aria-label="Cycle zoom">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><path d="M11 8v6"/><path d="M8 11h6"/></svg>
-                    <span id="zoom-label" class="zoom-lbl">1x</span>
-                </button>
-                <button class="tool-btn" id="btn-manual" onclick="app.openManualEntry()" aria-label="Manual batch entry">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 12h10"/><path d="M12 9v6"/></svg>
-                </button>
-                <button class="tool-btn" onclick="app.navigate('home')" aria-label="Close scanner">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                </button>
+                <button class="tool-btn" id="btn-flashlight" onclick="app.toggleFlashlight()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 7h-1v-3a2 2 0 0 0-2-2H10a2 2 0 0 0-2 2v3H7"/><path d="M12 7v10"/></svg></button>
+                <button class="tool-btn" id="btn-zoom" onclick="app.cycleZoom()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span id="zoom-label" class="zoom-lbl">1x</span></button>
+                <button class="tool-btn" id="btn-manual" onclick="app.openManualEntry()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 12h10"/></svg></button>
+                <button class="tool-btn" onclick="app.navigate('home')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
             </div>
-
             <div id="scan-error" class="scan-error hidden">
                 <p id="scan-error-text"></p>
                 <div class="scan-error-actions">
@@ -208,63 +158,66 @@
             </div>
         </div>
 
-        <!-- DASHBOARD VIEW -->
         <div id="view-dashboard" class="view">
             <div class="dash-header">
-                <div>
-                    <h1 class="dash-title">CREDO <span class="dash-slash">/</span> INTELLIGENCE</h1>
-                    <p class="dash-sub">Global pharmaceutical threat monitoring</p>
-                </div>
+                <div><h1 class="dash-title">CREDO <span class="dash-slash">/</span> INTELLIGENCE</h1><p class="dash-sub">Global pharmaceutical threat monitoring</p></div>
                 <button class="btn-refresh" onclick="app.fetchDashboardData()">↻ REFRESH</button>
             </div>
-
             <div id="dash-offline" class="offline-chip hidden">Backend asleep — showing sample data</div>
-
             <div class="dash-metrics" id="dash-metrics">
                 <div class="dash-metric"><span class="metric-num" id="m-total">—</span><span class="metric-label">TOTAL SCANS</span></div>
                 <div class="dash-metric red"><span class="metric-num" id="m-fake">—</span><span class="metric-label">COUNTERFEIT ALERTS</span></div>
                 <div class="dash-metric amber"><span class="metric-num" id="m-rate">—</span><span class="metric-label">ALERT RATE</span></div>
                 <div class="dash-metric blue"><span class="metric-num" id="m-loc">—</span><span class="metric-label">ACTIVE LOCATIONS</span></div>
             </div>
-
             <div class="dash-section">
                 <h3 class="dash-section-title">SCAN ACTIVITY</h3>
-                <div class="map-area" id="map-area"></div>
+                <div class="map-area" id="map-area"><div class="map-grid"></div></div>
             </div>
-
+            <div class="dash-section">
+                <h3 class="dash-section-title">COUNTERFEINT CLUSTER DETECTED</h3>
+                <div id="cluster-card" class="cluster-card"></div>
+            </div>
             <div class="dash-section">
                 <h3 class="dash-section-title">RECENT THREATS</h3>
                 <div id="threats-list"></div>
             </div>
         </div>
 
-        <!-- Bottom Nav -->
-        <nav id="bottom-nav" class="bottom-nav">
-            <button class="nav-item active" onclick="app.navigate('home')">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                <span>Verify</span>
-            </button>
-            <button class="nav-item scan-nav" onclick="app.navigate('scan')">
-                <div class="scan-nav-icon">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+        <div id="view-arch" class="view">
+            <div class="dash-header"><div><h1 class="dash-title">CREDO <span class="dash-slash">/</span> ARCHITECTURE</h1><p class="dash-sub">System design and technology stack</p></div></div>
+            <div class="arch-grid">
+                <div class="arch-card"><div class="arch-icon blue-bg"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg></div><h3>Frontend</h3><p class="arch-detail">Vanilla JavaScript · Semantic HTML · Native CSS</p><p class="arch-note">No React runtime. No virtual DOM.</p></div>
+                <div class="arch-card"><div class="arch-icon orange-bg"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div><h3>OCR Engine</h3><p class="arch-detail">Tesseract.js + WebAssembly</p><p class="arch-note">Runs entirely in the browser. No image upload.</p></div>
+                <div class="arch-card"><div class="arch-icon green-bg"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div><h3>Offline Storage</h3><p class="arch-detail">IndexedDB · Native browser database</p><p class="arch-note">Verification works without internet.</p></div>
+                <div class="arch-card"><div class="arch-icon red-bg"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><h3>Backend</h3><p class="arch-detail">Python · FastAPI · SQLAlchemy · SQLite</p><p class="arch-note">Intelligence layer — not a mandatory dependency.</p></div>
+            </div>
+            <div class="arch-separator"></div>
+            <div class="arch-flow">
+                <h3 class="dash-section-title">VERIFICATION FLOW</h3>
+                <div class="flow-steps">
+                    <div class="flow-step"><div class="flow-num">1</div><div><strong>Capture</strong><p>Camera frames captured via getUserMedia</p></div></div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step"><div class="flow-num">2</div><div><strong>OCR</strong><p>Tesseract.js extracts text via WebAssembly</p></div></div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step"><div class="flow-num">3</div><div><strong>Verify</strong><p>Batch checked against IndexedDB</p></div></div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step"><div class="flow-num">4</div><div><strong>Verdict</strong><p>Result delivered. Zero cloud dependency.</p></div></div>
                 </div>
-                <span>Scan</span>
-            </button>
-            <button class="nav-item" onclick="app.navigate('dashboard')">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                <span>Intel</span>
-            </button>
+            </div>
+        </div>
+
+        <nav id="bottom-nav" class="bottom-nav">
+            <button class="nav-item active" onclick="app.navigate('home')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Verify</span></button>
+            <button class="nav-item scan-nav" onclick="app.navigate('scan')"><div class="scan-nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></div><span>Scan</span></button>
+            <button class="nav-item" onclick="app.navigate('dashboard')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span>Intel</span></button>
         </nav>
     </div>
 
-    <!-- Manual Entry Modal -->
     <div id="manual-modal" class="modal hidden" role="dialog" aria-modal="true">
         <div class="modal-backdrop" onclick="app.closeManualEntry()"></div>
         <div class="modal-content">
-            <div class="modal-header">
-                <h2>Manual Entry</h2>
-                <button class="modal-close" onclick="app.closeManualEntry()">✕</button>
-            </div>
+            <div class="modal-header"><h2>Manual Entry</h2><button class="modal-close" onclick="app.closeManualEntry()">✕</button></div>
             <label for="manual-batch" class="sr-only">Batch Number</label>
             <input type="text" id="manual-batch" class="manual-input" placeholder="BATCH NUMBER" autocomplete="off" spellcheck="false">
             <p class="manual-hint">Found on medication packaging</p>

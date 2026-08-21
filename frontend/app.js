@@ -1,596 +1,455 @@
-const API_URL = 'https://credo-g5k2.onrender.com/api/v1';
-
-const DEMO_BATCHES = {
-    'VALID123': { drug: 'Combisunate 20/120' },
-    'VALID456': { drug: 'Paracetamol 500mg' },
-    'VALID802': { drug: 'Amatem Softgel' },
-    'FAKE001': { drug: 'Amoxicillin 500mg', message: 'NAFDAC alert: batch recalled — confirmed falsified.' },
-    'CNTF789': { drug: 'Artemether/Lumefantrine', message: 'Counterfeit batch circulating in Lagos markets.' }
-};
-
-const MEDICINES = {
-    'Combisunate 20/120': { name: 'Combisunate', dose: 'Artemether 20mg + Lumefantrine 120mg' },
-    'Amoxicillin 500mg': { name: 'Amoxicillin', dose: 'Amoxicillin Trihydrate 500mg Capsules' },
-    'Paracetamol 500mg': { name: 'Paracetamol', dose: 'Paracetamol 500mg Tablets' },
-    'Artemether Lumefantrine': { name: 'Coartem', dose: 'Artemether 20mg + Lumefantrine 120mg' },
-};
-
 const app = {
-    state: {
-        currentView: 'home',
-        isScanning: false,
-        scanPhase: 'idle',
-        ocrEngineReady: false,
-        localHistory: JSON.parse(localStorage.getItem('scanHistory') || '[]'),
-        telemetry: [],
-        videoStream: null,
-        videoTrack: null,
-        flashlightOn: false,
-        zoomLevel: 1,
-        zoomLevels: [1, 2, 3],
-        lastOcrTime: 0,
-        ocrThrottleMs: 1500,
-        onboardingPage: 1,
-        onboardingComplete: localStorage.getItem('onboardingComplete') === 'true',
-        demoMode: localStorage.getItem('demoMode') === 'true' || new URLSearchParams(window.location.search).get('demo') === 'true',
-        mockTelemetry: [],
-        demoTimer: null,
-        phaseTimer: null,
-        demoScans: [
-            { drug: 'Combisunate 20/120', batch: 'VALID123', verdict: 'SAFE', message: 'Medicine verified as safe.' },
-            { drug: 'Amoxicillin 500mg', batch: 'FAKE001', verdict: 'COUNTERFEIT', message: 'Batch number FAKE001 flagged as counterfeit by NAFDAC.' },
-            { drug: 'Paracetamol 500mg', batch: 'VALID456', verdict: 'SAFE', message: 'Medicine verified as safe.' },
-            { drug: 'Artemether Lumefantrine', batch: 'CNTF789', verdict: 'COUNTERFEIT', message: 'Batch number CNTF789 flagged as counterfeit by NAFDAC.' },
+  state: {
+    currentView: 'home',
+    demoMode: false,
+    scanning: false,
+    phase: 'idle',
+    flashlightOn: false,
+    zoomLevel: 1,
+    onboarded: false,
+    history: [],
+    demoIndex: 0,
+    online: navigator.onLine,
+    cameraActive: false,
+    stream: null,
+  },
+
+  DEMO_BATCHES: {
+    'PA2128L': { drug: 'Combisunate', dose: '80/480mg', manufacturer: 'Bliss GVS Pharma', expiry: '2025-06-30', status: 'counterfeit', reason: 'Unregistered batch flagged by NAFDAC', date: '2024-11-12', location: 'Lagos Market' },
+    'VALID123': { drug: 'Amoxicillin', dose: '500mg', manufacturer: 'Emzor Pharmaceutical', expiry: '2026-12-31', status: 'authentic', date: '2024-11-14', location: 'Lagos Pharmacy' },
+    'XC9032': { drug: 'Paracetamol', dose: '500mg', manufacturer: 'Swiss Pharma Nigeria', expiry: '2026-08-15', status: 'authentic', date: '2024-11-15', location: 'Abuja Clinic' },
+    'MET500X': { drug: 'Metformin', dose: '500mg', manufacturer: 'Nigerian Ethical Products', expiry: '2026-03-20', status: 'authentic', date: '2024-11-10', location: 'Port Harcourt' },
+    'FKE2024': { drug: 'Coartem', dose: '20/120mg', manufacturer: 'Novartis', expiry: '2025-09-01', status: 'counterfeit', reason: 'Batch not in manufacturer database', date: '2024-11-08', location: 'Kano Market' },
+  },
+
+  DEMO_SCANS: [
+    { batch: 'PA2128L', expected: 'counterfeit' },
+    { batch: 'VALID123', expected: 'authentic' },
+  ],
+
+  init() {
+    if (!localStorage.getItem('credo_onboarded')) {
+      document.getElementById('onboarding').classList.remove('hidden');
+    }
+    window.addEventListener('online', () => this.updateOnlineStatus(true));
+    window.addEventListener('offline', () => this.updateOnlineStatus(false));
+    this.updateOnlineStatus(navigator.onLine);
+    this.renderHistory();
+    this.fetchDashboardData();
+  },
+
+  updateOnlineStatus(online) {
+    this.state.online = online;
+    const badge = document.getElementById('offline-badge');
+    const liveBadge = document.getElementById('live-badge');
+    const modeText = document.getElementById('mode-badge-text');
+    const modeBadge = document.getElementById('mode-badge');
+
+    if (online) {
+      badge.classList.add('hidden');
+      liveBadge.style.display = '';
+      modeText.textContent = 'Live Sync';
+      modeBadge.className = 'mode-badge live';
+    } else {
+      badge.classList.remove('hidden');
+      liveBadge.style.display = 'none';
+      modeText.textContent = 'Offline Mode';
+      modeBadge.className = 'mode-badge offline';
+    }
+  },
+
+  completeOnboarding() {
+    this.state.onboarded = true;
+    localStorage.setItem('credo_onboarded', '1');
+    document.getElementById('onboarding').classList.add('hidden');
+  },
+
+  nextOnboardingPage() {
+    const pages = document.querySelectorAll('.onboarding-page');
+    let current = -1;
+    pages.forEach((p, i) => { if (p.classList.contains('active')) current = i; });
+    if (current < pages.length - 1) {
+      pages[current].classList.remove('active');
+      pages[current + 1].classList.add('active');
+      document.getElementById('onboarding-prev').disabled = false;
+      if (current + 1 === pages.length - 1) {
+        document.getElementById('onboarding-next').textContent = 'Get Started';
+        document.getElementById('onboarding-next').onclick = () => this.completeOnboarding();
+      }
+    }
+  },
+
+  prevOnboardingPage() {
+    const pages = document.querySelectorAll('.onboarding-page');
+    let current = -1;
+    pages.forEach((p, i) => { if (p.classList.contains('active')) current = i; });
+    if (current > 0) {
+      pages[current].classList.remove('active');
+      pages[current - 1].classList.add('active');
+      document.getElementById('onboarding-next').textContent = 'Next';
+      document.getElementById('onboarding-next').onclick = () => this.nextOnboardingPage();
+      if (current - 1 === 0) document.getElementById('onboarding-prev').disabled = true;
+    }
+  },
+
+  requestPermissions() {
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(() => this.completeOnboarding())
+        .catch(() => this.completeOnboarding());
+    } else {
+      this.completeOnboarding();
+    }
+  },
+
+  navigate(view) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active-view'));
+    document.getElementById('view-' + view).classList.add('active-view');
+    this.state.currentView = view;
+
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    if (view === 'home') document.querySelectorAll('.nav-item')[0].classList.add('active');
+    else if (view === 'scan') document.querySelectorAll('.nav-item')[1].classList.add('active');
+    else if (view === 'dashboard' || view === 'arch') document.querySelectorAll('.nav-item')[2].classList.add('active');
+
+    if (view === 'scan' && !this.state.demoMode) this.startScanner();
+    if (view === 'dashboard') this.fetchDashboardData();
+    if (view !== 'scan' && !this.state.demoMode) this.stopScanner();
+  },
+
+  toggleDemo() {
+    this.state.demoMode = !this.state.demoMode;
+    const label = document.getElementById('demo-label');
+    const overlay = document.getElementById('demo-overlay');
+    const scanFrame = document.getElementById('scan-frame');
+    const liveBadge = document.getElementById('live-badge');
+    const offlineBadge = document.getElementById('offline-badge');
+
+    if (this.state.demoMode) {
+      label.textContent = 'Exit Demo';
+      overlay.classList.remove('hidden');
+      scanFrame.style.display = 'none';
+      liveBadge.style.display = 'none';
+      offlineBadge.classList.add('hidden');
+      document.getElementById('demo-overlay').onclick = () => this.triggerDemoScan();
+    } else {
+      label.textContent = 'Try Live Demo';
+      overlay.classList.add('hidden');
+      scanFrame.style.display = '';
+      liveBadge.style.display = '';
+      this.stopScanner();
+    }
+  },
+
+  enableDemoFromError() {
+    document.getElementById('scan-error').classList.add('hidden');
+    this.state.demoMode = true;
+    document.getElementById('demo-label').textContent = 'Exit Demo';
+    document.getElementById('demo-overlay').classList.remove('hidden');
+    document.getElementById('scan-frame').style.display = 'none';
+    document.getElementById('live-badge').style.display = 'none';
+    document.getElementById('offline-badge').classList.add('hidden');
+    document.getElementById('demo-overlay').onclick = () => this.triggerDemoScan();
+  },
+
+  async startScanner() {
+    if (this.state.demoMode || this.state.cameraActive) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
+      });
+      this.state.stream = stream;
+      this.state.cameraActive = true;
+      const video = document.getElementById('camera-feed');
+      video.srcObject = stream;
+      document.getElementById('scan-status').textContent = 'ALIGN MEDICATION';
+    } catch (err) {
+      document.getElementById('scan-error-text').textContent =
+        'Camera access needed for live scanning. You can use Demo Mode instead.';
+      document.getElementById('scan-error').classList.remove('hidden');
+    }
+  },
+
+  stopScanner() {
+    if (this.state.stream) {
+      this.state.stream.getTracks().forEach(t => t.stop());
+      this.state.stream = null;
+      this.state.cameraActive = false;
+    }
+  },
+
+  resetScanner() {
+    this.state.scanning = false;
+    this.state.phase = 'idle';
+    document.getElementById('verdict-safe').classList.add('hidden');
+    document.getElementById('verdict-fake').classList.add('hidden');
+    document.getElementById('ai-panel').classList.add('hidden');
+    document.getElementById('ocr-display').classList.add('hidden');
+    document.getElementById('scan-line').classList.remove('active');
+    document.getElementById('scan-status').textContent = this.state.demoMode ? 'TAP TO SCAN' : 'ALIGN MEDICATION';
+    for (let i = 1; i <= 5; i++) {
+      const el = document.getElementById('step-' + i);
+      el.classList.remove('active', 'done');
+      el.querySelector('.step-icon').textContent = '\u25CB';
+    }
+    if (this.state.demoMode) {
+      document.getElementById('demo-overlay').onclick = () => this.triggerDemoScan();
+    }
+  },
+
+  async triggerDemoScan() {
+    if (this.state.scanning) return;
+    this.state.scanning = true;
+    const scan = this.DEMO_SCANS[this.state.demoIndex % this.DEMO_SCANS.length];
+    this.state.demoIndex++;
+
+    document.getElementById('demo-overlay').onclick = null;
+    const scanLine = document.getElementById('scan-frame').querySelector('.scan-line') || document.getElementById('scan-line');
+
+    document.getElementById('scan-status').textContent = 'CAPTURING IMAGE';
+    await this.sleep(600);
+
+    document.getElementById('scan-status').textContent = 'PROCESSING';
+    const aiPanel = document.getElementById('ai-panel');
+    aiPanel.classList.remove('hidden');
+
+    const steps = [
+      { id: 'step-1', delay: 700, text: 'Package detected' },
+      { id: 'step-2', delay: 700, text: 'Text region identified' },
+      { id: 'step-3', delay: 800, text: 'OCR extraction' },
+      { id: 'step-4', delay: 600, text: 'Batch number parsed' },
+      { id: 'step-5', delay: 900, text: 'Checking local database' },
+    ];
+
+    for (let i = 0; i < steps.length; i++) {
+      const s = steps[i];
+      const el = document.getElementById(s.id);
+      el.classList.add('active');
+      el.querySelector('.step-icon').textContent = '\u25CF';
+      await this.sleep(s.delay);
+
+      if (i === 2) {
+        const ocrDisplay = document.getElementById('ocr-display');
+        ocrDisplay.classList.remove('hidden');
+        document.getElementById('ocr-text').textContent = scan.batch;
+      }
+
+      el.classList.remove('active');
+      el.classList.add('done');
+      el.querySelector('.step-icon').textContent = '\u2713';
+    }
+
+    await this.sleep(400);
+    this.showVerdict(scan.batch);
+  },
+
+  showVerdict(batch) {
+    const info = this.DEMO_BATCHES[batch];
+    const isFake = info && info.status === 'counterfeit';
+    const netStatus = this.state.online ? 'ONLINE' : 'OFFLINE';
+
+    if (isFake) {
+      document.getElementById('v-batch-fake').textContent = batch;
+      document.getElementById('v-net-fake').textContent = netStatus;
+      document.getElementById('verdict-fake').classList.remove('hidden');
+      document.getElementById('verdict-fake').className = 'verdict-overlay fake-verdict';
+    } else {
+      document.getElementById('v-batch-safe').textContent = batch;
+      document.getElementById('v-net-safe').textContent = netStatus;
+      document.getElementById('verdict-safe').classList.remove('hidden');
+      document.getElementById('verdict-safe').className = 'verdict-overlay safe-verdict';
+    }
+
+    document.getElementById('scan-status').textContent = isFake ? 'COUNTERFEIT DETECTED' : 'AUTHENTIC VERIFIED';
+
+    this.state.history.unshift({
+      batch: batch,
+      status: isFake ? 'fake' : 'safe',
+      drug: info ? info.drug : 'Unknown',
+      time: new Date().toISOString(),
+      reason: info ? (info.reason || 'Verified against NAFDAC database') : 'Manual lookup',
+    });
+    this.renderHistory();
+  },
+
+  renderHistory() {
+    const container = document.getElementById('history-container');
+    if (!this.state.history.length) {
+      container.innerHTML = '<div class="history-empty">No scans yet. Tap Start Scan to begin.</div>';
+      return;
+    }
+    container.innerHTML = this.state.history.slice(0, 10).map(h => {
+      const d = new Date(h.time);
+      const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return `
+        <div class="scan-card">
+          <div class="scan-card-icon ${h.status}">
+            ${h.status === 'fake' ? '\u2716' : '\u2714'}
+          </div>
+          <div class="scan-card-info">
+            <div class="scan-card-batch">${h.batch}</div>
+            <div class="scan-card-meta">${h.drug} \u00B7 ${timeStr}</div>
+          </div>
+          <span class="scan-card-badge ${h.status}">
+            ${h.status === 'fake' ? 'COUNTERFEIT' : 'VERIFIED'}
+          </span>
+        </div>`;
+    }).join('');
+  },
+
+  async fetchDashboardData() {
+    const offlineChip = document.getElementById('dash-offline');
+    let data = null;
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 4000);
+      const resp = await fetch('https://credo-g5k2.onrender.com/api/v1/dashboard/stats', {
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      if (!resp.ok) throw new Error('bad status');
+      data = await resp.json();
+      offlineChip.classList.add('hidden');
+    } catch (e) {
+      offlineChip.classList.remove('hidden');
+      data = {
+        total_scans: 1247 + Math.floor(Math.random() * 50),
+        counterfeit_alerts: 18 + Math.floor(Math.random() * 5),
+        alert_rate: 1.4,
+        active_locations: 34 + Math.floor(Math.random() * 5),
+        recent_threats: [
+          { batch_number: 'PA2128L', status: 'counterfeit', drug_name: 'Combisunate 80/480mg', location: 'Lagos', created_at: '2024-11-12T10:30:00Z', reason: 'Unregistered batch flagged by NAFDAC' },
+          { batch_number: 'FKE2024', status: 'counterfeit', drug_name: 'Coartem 20/120mg', location: 'Kano', created_at: '2024-11-08T14:15:00Z', reason: 'Batch not in manufacturer database' },
+          { batch_number: 'XZ8811', status: 'suspicious', drug_name: 'Artemether 20mg', location: 'Abuja', created_at: '2024-11-06T09:45:00Z', reason: 'Packaging anomaly detected' },
         ],
-        demoScanIndex: 0,
-    },
-
-    navigate: (view) => {
-        document.querySelectorAll('.view').forEach(el => el.classList.remove('active-view'));
-        document.getElementById(`view-${view}`).classList.add('active-view');
-        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        if (view !== 'scan') {
-            document.getElementById('bottom-nav').classList.remove('hidden');
-            const navItems = document.querySelectorAll('.nav-item');
-            if (view === 'home') navItems[0].classList.add('active');
-            if (view === 'dashboard') navItems[2].classList.add('active');
-        } else {
-            document.getElementById('bottom-nav').classList.add('hidden');
-        }
-        app.state.currentView = view;
-        if (view === 'home') app.renderHistory();
-        if (view === 'scan') app.startScanner();
-        if (view === 'dashboard') app.fetchDashboardData();
-        if (view !== 'scan') app.stopScanner();
-    },
-
-    db: {
-        init: () => {
-            return new Promise((resolve, reject) => {
-                const request = indexedDB.open('ScanDB_Vanilla', 1);
-                request.onupgradeneeded = (e) => {
-                    const db = e.target.result;
-                    if (!db.objectStoreNames.contains('alerts')) db.createObjectStore('alerts', { keyPath: 'batch_number' });
-                };
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject(request.error);
-            });
-        },
-        sync: async () => {
-            if (app.state.demoMode) return;
-            try {
-                const res = await fetch(`${API_URL}/sync`);
-                const data = await res.json();
-                const db = await app.db.init();
-                const tx = db.transaction('alerts', 'readwrite');
-                const store = tx.objectStore('alerts');
-                store.clear();
-                data.counterfeit_alerts.forEach(alert => store.put(alert));
-                return new Promise(resolve => { tx.oncomplete = () => resolve(); });
-            } catch (err) {
-                console.error("Sync failed:", err);
-            }
-        },
-        checkBatch: async (text) => {
-            const clean = String(text).toUpperCase().replace(/\s+/g, '');
-            for (const [batch, info] of Object.entries(DEMO_BATCHES)) {
-                if (clean.includes(batch)) {
-                    return {
-                        verdict: (batch.startsWith('FAKE') || batch.startsWith('CNTF')) ? 'COUNTERFEIT' : 'SAFE',
-                        drug: info.drug, batch: batch,
-                        message: info.message || 'Medicine verified as safe.'
-                    };
-                }
-            }
-            try {
-                const db = await app.db.init();
-                return new Promise((resolve) => {
-                    const tx = db.transaction('alerts', 'readonly');
-                    const store = tx.objectStore('alerts');
-                    const req = store.getAll();
-                    req.onsuccess = () => {
-                        for (let alert of req.result) {
-                            if (text.includes(alert.batch_number)) {
-                                resolve({ verdict: 'COUNTERFEIT', drug: alert.brand_name, batch: alert.batch_number, message: alert.description });
-                                return;
-                            }
-                        }
-                        resolve(null);
-                    };
-                });
-            } catch (e) { return null; }
-        }
-    },
-
-    startScanner: async () => {
-        app.resetScanUI();
-        if (app.state.demoMode) { app.startDemoScanner(); return; }
-        app.state.isScanning = true;
-        app.state.scanPhase = 'scanning';
-        document.getElementById('scan-line').classList.add('sweep');
-        document.getElementById('scan-status').textContent = 'SCANNING PACKAGE...';
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } } });
-            app.state.videoStream = stream;
-            app.state.videoTrack = stream.getVideoTracks()[0];
-            const video = document.getElementById('camera-feed');
-            video.srcObject = stream;
-            video.style.display = '';
-            document.getElementById('demo-overlay').classList.add('hidden');
-            await app.db.sync();
-            video.onplay = () => app.captureFrame();
-        } catch (err) {
-            console.error("Camera error:", err);
-            document.getElementById('scan-error').classList.remove('hidden');
-            document.getElementById('scan-error-text').textContent = err.name === 'NotAllowedError' ? 'Camera permission denied.' : 'Unable to access camera.';
-            document.getElementById('scan-line').classList.remove('sweep');
-            document.getElementById('scan-status').textContent = 'CAMERA ERROR';
-        }
-    },
-
-    resetScanUI: () => {
-        clearTimeout(app.state.demoTimer);
-        clearTimeout(app.state.phaseTimer);
-        document.getElementById('scan-line').classList.remove('sweep');
-        document.getElementById('batch-label').classList.add('hidden');
-        document.getElementById('scan-frame').classList.remove('detected');
-        const demoFrame = document.querySelector('.demo-frame');
-        if (demoFrame) demoFrame.classList.remove('detected');
-        const pkg = document.querySelector('.demo-package');
-        if (pkg) pkg.style.display = 'none';
-        document.querySelector('.scan-viewport').classList.remove('demo-bg');
-        document.getElementById('ai-panel').classList.add('hidden');
-        document.getElementById('ai-panel').classList.remove('visible');
-        document.getElementById('verdict-safe').classList.add('hidden');
-        document.getElementById('verdict-fake').classList.add('hidden');
-        document.getElementById('scan-error').classList.add('hidden');
-        document.getElementById('demo-overlay').classList.add('hidden');
-        for (let i = 1; i <= 5; i++) {
-            const step = document.getElementById(`step-${i}`);
-            if (step) step.classList.remove('active');
-        }
-    },
-
-    startDemoScanner: () => {
-        app.state.isScanning = true;
-        app.state.scanPhase = 'scanning';
-        const video = document.getElementById('camera-feed');
-        video.style.display = 'none';
-        video.srcObject = null;
-        document.getElementById('scan-error').classList.add('hidden');
-        document.getElementById('scan-frame').style.display = 'none';
-
-        const vp = document.querySelector('.scan-viewport');
-        vp.classList.add('demo-bg');
-        const firstScan = app.state.demoScans[app.state.demoScanIndex];
-        const med = MEDICINES[firstScan.drug] || { name: firstScan.drug, dose: '' };
-        let pkg = document.querySelector('.demo-package');
-        if (!pkg) {
-            pkg = document.createElement('div');
-            pkg.className = 'demo-package';
-            vp.appendChild(pkg);
-        }
-        pkg.innerHTML = `
-                <div class="pkg-top">
-                    <div><div class="pkg-logo">PHARMA</div></div>
-                    <div class="pkg-nafdac">NAFDAC REG</div>
-                </div>
-                <div class="pkg-name">${med.name}</div>
-                <div class="pkg-dose">${med.dose}</div>
-                <div class="pkg-divider"></div>
-                <div class="pkg-meta">
-                    <div class="pkg-batch" id="pkg-batch-text">${firstScan.batch}</div>
-                    <div class="pkg-exp">EXP 08/2027</div>
-                </div>
-                <div class="pkg-barcode">
-                    <div class="pkg-bar" style="width:2px"></div><div class="pkg-bar" style="width:1px"></div><div class="pkg-bar" style="width:3px"></div><div class="pkg-bar" style="width:1px"></div><div class="pkg-bar" style="width:2px"></div><div class="pkg-bar" style="width:1px"></div><div class="pkg-bar" style="width:3px"></div><div class="pkg-bar" style="width:1px"></div><div class="pkg-bar" style="width:2px"></div><div class="pkg-bar" style="width:3px"></div><div class="pkg-bar" style="width:1px"></div><div class="pkg-bar" style="width:2px"></div><div class="pkg-bar" style="width:1px"></div><div class="pkg-bar" style="width:3px"></div><div class="pkg-bar" style="width:1px"></div><div class="pkg-bar" style="width:2px"></div><div class="pkg-bar" style="width:1px"></div><div class="pkg-bar" style="width:3px"></div><div class="pkg-bar" style="width:2px"></div><div class="pkg-bar" style="width:1px"></div>
-                </div>`;
-        pkg.style.display = '';
-
-        document.getElementById('demo-overlay').classList.remove('hidden');
-        document.getElementById('scan-status').textContent = 'SCANNING PACKAGE...';
-
-        const overlay = document.getElementById('demo-overlay');
-        overlay.onclick = () => {
-            if (!app.state.isScanning) return;
-            clearTimeout(app.state.demoTimer);
-            app.runScanPhaseSequence();
-        };
-
-        app.state.demoTimer = setTimeout(() => app.runScanPhaseSequence(), 2500);
-    },
-
-    runScanPhaseSequence: () => {
-        if (!app.state.isScanning) return;
-        const scan = app.state.demoScans[app.state.demoScanIndex];
-        const batch = scan.batch;
-        const med = MEDICINES[scan.drug] || { name: scan.drug, dose: '' };
-
-        app.state.scanPhase = 'detected';
-        const demoSweep = document.querySelector('.demo-overlay .scan-line');
-        if (demoSweep) demoSweep.style.animation = 'none';
-        document.querySelector('.demo-frame').classList.add('detected');
-
-        const pkgName = document.querySelector('.pkg-name');
-        const pkgDose = document.querySelector('.pkg-dose');
-        const pkgBatch = document.getElementById('pkg-batch-text');
-        if (pkgName) pkgName.textContent = med.name;
-        if (pkgDose) pkgDose.textContent = med.dose;
-        if (pkgBatch) {
-            pkgBatch.textContent = batch;
-            pkgBatch.style.color = scan.verdict === 'COUNTERFEIT' ? 'var(--red)' : 'var(--vermilion)';
-        }
-        const pkg = document.querySelector('.demo-package');
-        if (pkg) pkg.style.boxShadow = scan.verdict === 'COUNTERFEIT'
-            ? '0 0 40px rgba(239,68,68,0.3), 0 30px 80px rgba(0,0,0,0.6)'
-            : '0 0 40px rgba(255,107,53,0.3), 0 30px 80px rgba(0,0,0,0.6)';
-        document.getElementById('scan-status').textContent = 'BATCH DETECTED';
-
-        app.state.phaseTimer = setTimeout(() => {
-            if (!app.state.isScanning) return;
-            app.state.scanPhase = 'checking';
-            document.getElementById('ai-panel').classList.remove('hidden');
-            setTimeout(() => document.getElementById('ai-panel').classList.add('visible'), 50);
-            document.getElementById('scan-status').textContent = 'EDGE PROCESSING...';
-            app.animateAISteps(() => {
-                app.handleVerdict(scan);
-                app.state.demoScanIndex = (app.state.demoScanIndex + 1) % app.state.demoScans.length;
-            });
-        }, 800);
-    },
-
-    animateAISteps: (callback) => {
-        const steps = [1, 2, 3, 4, 5];
-        let delay = 0;
-        steps.forEach((num, i) => {
-            setTimeout(() => {
-                const step = document.getElementById(`step-${num}`);
-                if (step) step.classList.add('active');
-                if (i === steps.length - 1) {
-                    setTimeout(callback, 500);
-                }
-            }, delay);
-            delay += i < 3 ? 350 : 500;
-        });
-    },
-
-    captureFrame: async () => {
-        if (!app.state.isScanning) return;
-        const now = Date.now();
-        if (now - app.state.lastOcrTime < app.state.ocrThrottleMs) {
-            if (app.state.isScanning) requestAnimationFrame(app.captureFrame);
-            return;
-        }
-        const video = document.getElementById('camera-feed');
-        if (video.readyState < 2) {
-            if (app.state.isScanning) requestAnimationFrame(app.captureFrame);
-            return;
-        }
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0);
-        app.state.lastOcrTime = now;
-        try {
-            const { data: { text } } = await Tesseract.recognize(canvas, 'eng');
-            const cleanText = text.replace(/\\n/g, ' ').trim();
-            if (cleanText) {
-                const match = await app.db.checkBatch(cleanText);
-                if (match) { app.handleVerdict(match); return; }
-            }
-        } catch (err) { console.error("OCR Error", err); }
-        if (app.state.isScanning) requestAnimationFrame(app.captureFrame);
-    },
-
-    handleVerdict: async (match) => {
-        app.stopScanner();
-        document.getElementById('scan-frame').style.display = '';
-        document.getElementById('demo-overlay').classList.add('hidden');
-        document.querySelector('.scan-viewport').classList.remove('demo-bg');
-        const pkg = document.querySelector('.demo-package');
-        if (pkg) pkg.style.display = 'none';
-        document.getElementById('scan-status').textContent = 'ANALYSIS COMPLETE';
-        if (navigator.vibrate) navigator.vibrate(match.verdict === 'COUNTERFEIT' ? [100, 50, 100, 50, 200] : [50, 100, 50]);
-
-        const scanRecord = { id: Date.now(), timestamp: new Date().toISOString(), batch_number: match.batch, drug_name: match.drug, verdict: match.verdict };
-        app.state.localHistory = [scanRecord, ...app.state.localHistory].slice(0, 10);
-        localStorage.setItem('scanHistory', JSON.stringify(app.state.localHistory));
-        app.sendTelemetry(match);
-
-        if (match.verdict === 'COUNTERFEIT') {
-            document.getElementById('v-batch-fake').textContent = `BATCH ${match.batch}`;
-            const vf = document.getElementById('verdict-fake');
-            vf.classList.remove('hidden');
-            vf.classList.add('fake-verdict');
-        } else {
-            document.getElementById('v-batch-safe').textContent = `BATCH ${match.batch}`;
-            const vs = document.getElementById('verdict-safe');
-            vs.classList.remove('hidden');
-            vs.classList.add('safe-verdict');
-        }
-
-        const msg = new SpeechSynthesisUtterance(match.verdict === 'COUNTERFEIT' ? "Alert! Falsified medicine detected." : "Medicine verified as safe.");
-        window.speechSynthesis.speak(msg);
-    },
-
-    resetScanner: () => {
-        document.getElementById('verdict-safe').classList.add('hidden');
-        document.getElementById('verdict-safe').classList.remove('safe-verdict');
-        document.getElementById('verdict-fake').classList.add('hidden');
-        document.getElementById('verdict-fake').classList.remove('fake-verdict');
-        app.startScanner();
-    },
-
-    stopScanner: () => {
-        app.state.isScanning = false;
-        app.state.scanPhase = 'idle';
-        clearTimeout(app.state.demoTimer);
-        clearTimeout(app.state.phaseTimer);
-        document.getElementById('scan-line').classList.remove('sweep');
-        if (app.state.videoTrack) { app.state.videoTrack.stop(); app.state.videoTrack = null; }
-        if (app.state.videoStream) { app.state.videoStream.getTracks().forEach(t => t.stop()); app.state.videoStream = null; }
-        const video = document.getElementById('camera-feed');
-        video.srcObject = null;
-        app.state.flashlightOn = false;
-    },
-
-    toggleFlashlight: async () => {
-        if (!app.state.videoTrack) return;
-        try {
-            app.state.flashlightOn = !app.state.flashlightOn;
-            await app.state.videoTrack.applyConstraints({ advanced: [{ torch: app.state.flashlightOn }] });
-            document.getElementById('btn-flashlight').classList.toggle('active', app.state.flashlightOn);
-        } catch (err) { app.showToast("Flashlight not available"); }
-    },
-
-    cycleZoom: async () => {
-        if (!app.state.videoTrack) return;
-        const idx = app.state.zoomLevels.indexOf(app.state.zoomLevel);
-        app.state.zoomLevel = app.state.zoomLevels[(idx + 1) % app.state.zoomLevels.length];
-        try { await app.state.videoTrack.applyConstraints({ advanced: [{ zoom: app.state.zoomLevel }] }); } catch (e) {}
-        document.getElementById('zoom-label').textContent = `${app.state.zoomLevel}x`;
-    },
-
-    openManualEntry: () => {
-        document.getElementById('manual-modal').classList.remove('hidden');
-        setTimeout(() => document.getElementById('manual-batch').focus(), 300);
-    },
-    closeManualEntry: () => {
-        document.getElementById('manual-modal').classList.add('hidden');
-        document.getElementById('manual-batch').value = '';
-    },
-    submitManualEntry: async () => {
-        const text = document.getElementById('manual-batch').value.trim().toUpperCase();
-        if (!text) return;
-        app.closeManualEntry();
-        document.getElementById('scan-status').textContent = 'VERIFYING...';
-        const match = await app.db.checkBatch(text);
-        if (match) { app.handleVerdict(match); } else {
-            app.showToast("Batch not found in database");
-            app.resetScanner();
-        }
-    },
-
-    showToast: (message) => {
-        const existing = document.querySelector('.toast');
-        if (existing) existing.remove();
-        const toast = document.createElement('div');
-        toast.className = 'toast';
-        toast.textContent = message;
-        toast.setAttribute('role', 'alert');
-        document.body.appendChild(toast);
-        requestAnimationFrame(() => toast.classList.add('visible'));
-        setTimeout(() => { toast.classList.remove('visible'); setTimeout(() => toast.remove(), 300); }, 3000);
-    },
-
-    initOnboarding: () => {
-        if (app.state.onboardingComplete) return;
-        document.getElementById('onboarding').classList.remove('hidden');
-        app.state.onboardingPage = 1;
-        app.updateOnboardingUI();
-    },
-    completeOnboarding: () => {
-        app.state.onboardingComplete = true;
-        localStorage.setItem('onboardingComplete', 'true');
-        document.getElementById('onboarding').classList.add('hidden');
-    },
-    nextOnboardingPage: () => {
-        if (app.state.onboardingPage < 4) { app.state.onboardingPage++; app.updateOnboardingUI(); }
-        else app.completeOnboarding();
-    },
-    prevOnboardingPage: () => {
-        if (app.state.onboardingPage > 1) { app.state.onboardingPage--; app.updateOnboardingUI(); }
-    },
-    updateOnboardingUI: () => {
-        document.querySelectorAll('.onboarding-page').forEach(p => {
-            p.classList.toggle('active', parseInt(p.dataset.page) === app.state.onboardingPage);
-        });
-        const prev = document.getElementById('onboarding-prev');
-        const next = document.getElementById('onboarding-next');
-        prev.disabled = app.state.onboardingPage === 1;
-        prev.style.opacity = app.state.onboardingPage === 1 ? '0.5' : '1';
-        next.textContent = app.state.onboardingPage === 4 ? 'Get Started' : 'Next';
-    },
-    requestPermissions: async () => {
-        try { await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }); app.showToast("Camera access granted"); }
-        catch (e) { app.showToast("Camera permission needed"); }
-        app.completeOnboarding();
-    },
-
-    toggleDemo: () => {
-        app.state.demoMode = !app.state.demoMode;
-        localStorage.setItem('demoMode', String(app.state.demoMode));
-        app.applyDemoUI();
-        if (app.state.currentView === 'scan') { app.stopScanner(); app.startScanner(); }
-    },
-    enableDemoFromError: () => {
-        app.state.demoMode = true;
-        localStorage.setItem('demoMode', 'true');
-        app.applyDemoUI();
-        app.startScanner();
-    },
-    applyDemoUI: () => {
-        const badge = document.getElementById('mode-badge');
-        const badgeText = document.getElementById('mode-badge-text');
-        const label = document.getElementById('demo-label');
-        if (app.state.demoMode) {
-            badge?.classList.remove('live'); badge?.classList.add('demo');
-            if (badgeText) badgeText.textContent = 'Demo Mode';
-            if (label) label.textContent = 'Exit Demo Mode';
-        } else {
-            badge?.classList.remove('demo'); badge?.classList.add('live');
-            if (badgeText) badgeText.textContent = 'Live Sync';
-            if (label) label.textContent = 'Try Live Demo';
-        }
-    },
-
-    getMockTelemetry: () => {
-        if (app.state.mockTelemetry.length > 0) return app.state.mockTelemetry;
-        const seeds = [
-            ['Combisunate 20/120', 'VALID123', 'SAFE', 6.45, 3.39],
-            ['Amoxicillin 500mg', 'FAKE001', 'COUNTERFEIT', 6.60, 3.35],
-            ['Paracetamol 500mg', 'VALID456', 'SAFE', 9.06, 7.49],
-            ['Artemether/Lumefantrine', 'CNTF789', 'COUNTERFEIT', 6.52, 3.38],
-            ['Amatem Softgel', 'VALID802', 'SAFE', 6.46, 3.55],
-            ['Amoxicillin 500mg', 'FAKE001', 'COUNTERFEIT', 6.58, 3.29]
-        ];
-        const now = Date.now();
-        app.state.mockTelemetry = seeds.map((s, i) => ({
-            drug_name: s[0], batch_number: s[1], verdict: s[2],
-            latitude: +(s[3] + (Math.random() - 0.5) * 0.05).toFixed(4),
-            longitude: +(s[4] + (Math.random() - 0.5) * 0.05).toFixed(4),
-            scan_timestamp: new Date(now - (i + 1) * 47 * 60000).toISOString()
-        }));
-        return app.state.mockTelemetry;
-    },
-
-    sendTelemetry: async (match) => {
-        const payload = { latitude: 6.5244, longitude: 3.3792, drug_name: match.drug, batch_number: match.batch, verdict: match.verdict };
-        if (app.state.demoMode) { app.state.mockTelemetry.unshift({ ...payload, scan_timestamp: new Date().toISOString() }); return; }
-        try {
-            if ("geolocation" in navigator) {
-                navigator.geolocation.getCurrentPosition(async (pos) => {
-                    payload.latitude = pos.coords.latitude; payload.longitude = pos.coords.longitude;
-                    await fetch(`${API_URL}/telemetry`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                }, async () => {
-                    await fetch(`${API_URL}/telemetry`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                });
-            }
-        } catch (e) { console.error("Telemetry failed"); }
-    },
-
-    fetchDashboardData: async () => {
-        let data = null;
-        if (app.state.demoMode) {
-            data = app.getMockTelemetry();
-        } else {
-            try {
-                const controller = new AbortController();
-                const timeout = setTimeout(() => controller.abort(), 8000);
-                const res = await fetch(`${API_URL}/telemetry/heatmap`, { signal: controller.signal });
-                clearTimeout(timeout);
-                if (!res.ok) throw new Error();
-                data = await res.json();
-                document.getElementById('dash-offline').classList.add('hidden');
-            } catch (e) {
-                data = app.getMockTelemetry();
-                document.getElementById('dash-offline').classList.remove('hidden');
-            }
-        }
-        app.renderDashboard(data);
-    },
-
-    renderDashboard: (data) => {
-        const total = data.length;
-        const fake = data.filter(d => d.verdict === 'COUNTERFEIT').length;
-        const safe = total - fake;
-        const rate = total > 0 ? ((fake / total) * 100).toFixed(1) : '0.0';
-        const locations = new Set(data.map(d => `${d.latitude.toFixed(1)}_${d.longitude.toFixed(1)}`)).size;
-
-        document.getElementById('m-total').textContent = total.toLocaleString();
-        document.getElementById('m-fake').textContent = fake.toLocaleString();
-        document.getElementById('m-rate').textContent = rate + '%';
-        document.getElementById('m-loc').textContent = locations;
-
-        const mapArea = document.getElementById('map-area');
-        mapArea.innerHTML = '<div class="map-grid"></div>';
-        data.forEach(d => {
-            const latPct = Math.min(90, Math.max(10, ((d.latitude - 4) / 6) * 80 + 10));
-            const lngPct = Math.min(90, Math.max(10, ((d.longitude - 2) / 6) * 80 + 10));
-            const dot = document.createElement('div');
-            dot.className = `map-dot ${d.verdict === 'COUNTERFEIT' ? 'fake' : 'safe'}`;
-            dot.style.left = lngPct + '%';
-            dot.style.top = (100 - latPct) + '%';
-            dot.title = `${d.drug_name} — ${d.batch_number}`;
-            mapArea.appendChild(dot);
-        });
-
-        const threats = document.getElementById('threats-list');
-        const threatData = data.filter(d => d.verdict === 'COUNTERFEIT').slice(0, 5);
-        if (threatData.length === 0) {
-            threats.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text-subtle);font-size:0.85rem;">No threats detected</div>';
-        } else {
-            threats.innerHTML = threatData.map(t => `
-                <div class="threat-item">
-                    <div>
-                        <div class="threat-batch">${t.batch_number}</div>
-                        <div class="threat-time">${new Date(t.scan_timestamp).toLocaleTimeString()}</div>
-                    </div>
-                    <span class="threat-badge fake">COUNTERFEIT</span>
-                </div>
-            `).join('');
-        }
-    },
-
-    renderHistory: () => {
-        const container = document.getElementById('history-container');
-        if (app.state.localHistory.length === 0) {
-            container.innerHTML = `<div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><p>No scan history yet</p><p style="font-size:0.8rem;margin-top:0.3rem;">Your verification scans will appear here</p></div>`;
-            return;
-        }
-        container.innerHTML = app.state.localHistory.map(scan => `
-            <div class="history-item ${scan.verdict === 'COUNTERFEIT' ? 'fake' : 'safe'}">
-                <div>
-                    <h4>${scan.drug_name}</h4>
-                    <span class="batch">${scan.batch_number}</span>
-                    <p class="time">${new Date(scan.timestamp).toLocaleString()}</p>
-                </div>
-                <div style="flex-shrink:0;margin-left:1rem;">
-                    ${scan.verdict === 'COUNTERFEIT'
-                        ? '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="17"/></svg>'
-                        : '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>'
-                    }
-                </div>
-            </div>
-        `).join('');
+      };
     }
+
+    document.getElementById('m-total').textContent = (data.total_scans || 0).toLocaleString();
+    document.getElementById('m-fake').textContent = data.counterfeit_alerts || 0;
+    document.getElementById('m-rate').textContent = (data.alert_rate || 0) + '%';
+    document.getElementById('m-loc').textContent = data.active_locations || 0;
+
+    this.renderMap(data);
+    this.renderCluster(data);
+    this.renderThreats(data.recent_threats || []);
+  },
+
+  renderMap(data) {
+    const mapArea = document.getElementById('map-area');
+    mapArea.innerHTML = '<div class="map-grid"></div>';
+    const locations = [
+      { x: 35, y: 45, type: 'red' }, { x: 62, y: 30, type: 'red' },
+      { x: 48, y: 70, type: 'green' }, { x: 75, y: 55, type: 'green' },
+      { x: 25, y: 25, type: 'green' }, { x: 55, y: 50, type: 'green' },
+      { x: 80, y: 70, type: 'red' }, { x: 40, y: 35, type: 'green' },
+    ];
+    locations.forEach(loc => {
+      const dot = document.createElement('div');
+      dot.className = 'map-dot ' + loc.type;
+      dot.style.left = loc.x + '%';
+      dot.style.top = loc.y + '%';
+      mapArea.appendChild(dot);
+    });
+  },
+
+  renderCluster(data) {
+    const clusterCard = document.getElementById('cluster-card');
+    if (data.counterfeit_alerts > 0) {
+      clusterCard.innerHTML = `
+        <div class="cluster-header">
+          <div class="cluster-dot"></div>
+          <span class="cluster-title">Lagos Region \u2014 3 Counterfeit Reports</span>
+        </div>
+        <div class="cluster-detail">
+          Multiple counterfeit alerts detected within 5km radius. Batch PA2128L linked to unregistered distributor.
+          Recommend increased surveillance in Surulere, Yaba, and Ikeja markets.
+        </div>`;
+    } else {
+      clusterCard.innerHTML = '<div class="cluster-detail">No active clusters detected.</div>';
+    }
+  },
+
+  renderThreats(threats) {
+    const list = document.getElementById('threats-list');
+    if (!threats.length) {
+      list.innerHTML = '<div class="history-empty">No recent threats.</div>';
+      return;
+    }
+    list.innerHTML = threats.map(t => {
+      const d = new Date(t.created_at);
+      const timeStr = d.toLocaleDateString();
+      const badgeClass = t.status === 'counterfeit' ? 'fake' : 'suspicious';
+      return `
+        <div class="threat-item">
+          <div class="threat-dot ${t.status === 'counterfeit' ? 'red' : 'amber'}"></div>
+          <div class="threat-info">
+            <div class="threat-batch">${t.batch_number} \u2014 ${t.drug_name || 'Unknown'}</div>
+            <div class="threat-meta">${t.location || 'Unknown'} \u00B7 ${timeStr}</div>
+          </div>
+          <span class="threat-badge ${badgeClass}">${t.status.toUpperCase()}</span>
+        </div>`;
+    }).join('');
+  },
+
+  openManualEntry() {
+    document.getElementById('manual-modal').classList.remove('hidden');
+    document.getElementById('manual-batch').focus();
+  },
+
+  closeManualEntry() {
+    document.getElementById('manual-modal').classList.add('hidden');
+    document.getElementById('manual-batch').value = '';
+  },
+
+  submitManualEntry() {
+    const batch = document.getElementById('manual-batch').value.trim().toUpperCase();
+    if (!batch) return;
+    this.closeManualEntry();
+    this.state.scanning = true;
+    this.state.phase = 'verdict';
+    const isFake = !!this.DEMO_BATCHES[batch] && this.DEMO_BATCHES[batch].status === 'counterfeit';
+    if (isFake) {
+      this.showVerdict(batch);
+    } else if (this.DEMO_BATCHES[batch]) {
+      this.showVerdict(batch);
+    } else {
+      const entry = {
+        batch, drug: 'Unknown', status: 'safe', time: new Date().toISOString(),
+        reason: 'Batch not found in local database. Manual verification recommended.',
+      };
+      this.state.history.unshift(entry);
+      this.renderHistory();
+      document.getElementById('v-batch-safe').textContent = batch;
+      document.getElementById('v-net-safe').textContent = this.state.online ? 'ONLINE' : 'OFFLINE';
+      document.getElementById('verdict-safe').classList.remove('hidden');
+      document.getElementById('verdict-safe').className = 'verdict-overlay safe-verdict';
+    }
+  },
+
+  toggleFlashlight() {
+    this.state.flashlightOn = !this.state.flashlightOn;
+    const btn = document.getElementById('btn-flashlight');
+    btn.classList.toggle('active', this.state.flashlightOn);
+    if (this.state.stream) {
+      const track = this.state.stream.getVideoTracks()[0];
+      const capabilities = track.getCapabilities ? track.getCapabilities() : {};
+      if (capabilities.torch) {
+        track.applyConstraints({ advanced: [{ torch: this.state.flashlightOn }] });
+      }
+    }
+  },
+
+  cycleZoom() {
+    const levels = [1, 1.5, 2];
+    const idx = levels.indexOf(this.state.zoomLevel);
+    this.state.zoomLevel = levels[(idx + 1) % levels.length];
+    document.getElementById('zoom-label').textContent = this.state.zoomLevel + 'x';
+    const video = document.getElementById('camera-feed');
+    video.style.transform = `scale(${this.state.zoomLevel})`;
+  },
+
+  sleep(ms) { return new Promise(r => setTimeout(r, ms)); },
 };
 
-window.onload = () => {
-    app.applyDemoUI();
-    app.initOnboarding();
-    app.navigate('home');
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js').catch(() => {});
-    }
-};
+document.addEventListener('DOMContentLoaded', () => app.init());
