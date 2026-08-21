@@ -1,0 +1,30 @@
+{
+  "name": "Credo - NAFDAC Medical Authenticity",
+  "short_name": "Credo",
+  "description": "Offline-first medication authenticity verifier. Scan batch numbers to detect counterfeit drugs using NAFDAC's database.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A0F0D",
+  "theme_color": "#FF6B35",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["medical", "health", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Scan Medication",
+      "short_name": "Scan",
+      "description": "Start scanning a medication batch number",
+      "url": "/?action=scan",
+      "icons": [{ "src": "icons/scan-shortcut.png", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [],
+  "prefer_related_applications": false
+}
