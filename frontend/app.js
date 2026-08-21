@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:8000/api/v1';
+const API_URL = 'https://credo-g5k2.onrender.com/api/v1';
 
 const app = {
     state: {
